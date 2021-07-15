@@ -41,15 +41,4 @@ public class ServerConfig {
 
         }
     }
-
-    public static void main(String[] args) {
-        ServerConfigBuilder builder = new ServerConfigBuilder();
-        builder
-                .setPort(7878)
-                .setPort(45)
-                .setPort(4234);
-
-        ServerConfig config = ServerConfig.build(builder);
-
-    }
 }
