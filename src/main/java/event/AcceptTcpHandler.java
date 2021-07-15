@@ -2,6 +2,7 @@
 package event;
 
 import client.PandisClient;
+import server.PandisServer;
 
 import java.io.IOException;
 import java.nio.channels.ClosedChannelException;
@@ -66,6 +67,7 @@ public class AcceptTcpHandler implements FileEventHandler{
         // 创建client
         PandisClient newClient = PandisClient.createClient(socketChannel);
         server.addClient(newClient);
+
         // 将这个与客户端关连的socketChannel也注册到EventLoop, 其中，客户端对象client以事件的clientData传入，这里暂时以null代替
         try {
             server.getEventLoop().registerFileEvent(socketChannel, SelectionKey.OP_READ, ReadQueryFromClientHandler.getHandler(), null);

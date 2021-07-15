@@ -1,5 +1,6 @@
 package server;
 
+import client.PandisClient;
 import event.AcceptTcpHandler;
 import event.EventLoop;
 import server.config.ServerConfig;
@@ -10,6 +11,8 @@ import java.net.ServerSocket;
 import java.net.SocketAddress;
 import java.net.SocketOption;
 import java.nio.channels.*;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -20,6 +23,8 @@ import java.util.Set;
 public class PandisServer {
     private ServerConfig serverConfig;  // 服务端配置
     private EventLoop eventLoop;        // 事件循环
+    private List<PandisClient> clients; // 保存了所有连接到服务器的客户端结构
+    private static volatile PandisServer serverInstance; // 服务器实例
 
     public PandisServer() {
         super();
@@ -27,6 +32,9 @@ public class PandisServer {
 
     public static void main(String[] args) {
         PandisServer server = new PandisServer();
+
+        PandisServer.serverInstance = server;
+
         // 初始化服务器配置
         server.initServerConfig();
 
@@ -44,6 +52,9 @@ public class PandisServer {
     private void initServer() {
         // 创建事件循环对象
         this.eventLoop = EventLoop.createEventLoop();
+
+        // 创建保存客户端结构的链表
+        this.clients = new LinkedList<>();
 
         // 创建数据库
 
@@ -71,6 +82,18 @@ public class PandisServer {
 
     private void initServerConfig() {
         this.serverConfig = ServerConfig.build();
+    }
+
+    public  EventLoop getEventLoop() {
+        return this.eventLoop;
+    }
+
+    public void addClient(PandisClient client) {
+        this.clients.add(client);
+    }
+
+    public static PandisServer getInstance() {
+        return serverInstance;
     }
 }
 
