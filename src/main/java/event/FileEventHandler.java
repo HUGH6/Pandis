@@ -1,5 +1,7 @@
 package event;
 
+import server.PandisServer;
+
 import java.nio.channels.SelectionKey;
 
 /**
@@ -12,5 +14,5 @@ import java.nio.channels.SelectionKey;
 
 @FunctionalInterface
 public interface FileEventHandler {
-    boolean handle(EventLoop eventLoop, SelectionKey selectionKey, Object privateData);
+    boolean handle(PandisServer server, SelectionKey selectionKey, Object privateData);
 }
