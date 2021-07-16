@@ -69,11 +69,11 @@ public class AcceptTcpHandler implements FileEventHandler{
         server.addClient(newClient);
 
         // 将这个与客户端关连的socketChannel也注册到EventLoop, 其中，客户端对象client以事件的clientData传入，这里暂时以null代替
-        try {
-            server.getEventLoop().registerFileEvent(socketChannel, SelectionKey.OP_READ, ReadQueryFromClientHandler.getHandler(), null);
-        } catch (ClosedChannelException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            server.getEventLoop().registerFileEvent(socketChannel, SelectionKey.OP_READ, ReadQueryFromClientHandler.getHandler(), null);
+//        } catch (ClosedChannelException e) {
+//            e.printStackTrace();
+//        }
 
         System.out.println("测试代码");
         return true;
