@@ -3,7 +3,7 @@ package common.store;
 import lombok.Data;
 
 @Data
-class Sds {
+public class Sds {
     // buf 中已经使用的字节的数量
     // 相当于sds所保存的字符串的长度
     private int len;
