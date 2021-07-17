@@ -1,12 +1,17 @@
 package client;
 
+import common.store.Sds;
 import common.store.StoreObject;
-import lombok.Data;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 /**
  * @ClassName PandisClient
@@ -16,11 +21,12 @@ import java.util.List;
  * @Version
  */
 public class PandisClient {
+    private static Log logger = LogFactory.getLog(PandisClient.class);
 
     private final int REDIS_REPLY_CHUNK_BYTES = 16*1024;
 
     // 套接字描述符
-    private SocketChannel fd;
+    private SocketChannel socketChannel;
 
     // 当前正在使用的数据库
 //     PandisDb db;
@@ -32,7 +38,12 @@ public class PandisClient {
     private StoreObject name;             /* As set by CLIENT SETNAME */
 
     // 查询缓冲区
-//    sds querybuf;
+    private Sds queryBuffer;
+    // 零时的缓冲区替代品
+    private StringBuilder tempQueryBuffer = new StringBuilder();
+
+    // padis新增，用来从socketChannel中读取数据
+    private ByteBuffer socketBuffer;
 
     // 查询缓冲区长度峰值
     private int queryBufPeak;   /* Recent (100ms or more) peak of querybuf size */
@@ -136,7 +147,7 @@ public class PandisClient {
     // 回复缓冲区
     private char[] buf = new char[REDIS_REPLY_CHUNK_BYTES];
 
-    public static PandisClient createClient(SocketChannel fd){
+    public static PandisClient createClient(SocketChannel socketChannel){
         PandisClient ps = new PandisClient();
         // 当 fd 为 true 时，创建带网络连接的客户端
         // 如果 fd 为 false 时 ，那么创建无网络连接的伪客户端
@@ -144,10 +155,10 @@ public class PandisClient {
         // 需要用到这种伪终端
 
         //初始化属性
-        ps.fd = fd;
+        ps.socketChannel = socketChannel;
         ps.name = null;
         ps.bufPos = 0;
-//        ps.queryBuf = sdsEmpty();
+        ps.socketBuffer = ByteBuffer.allocate(8);
         ps.queryBufPeak = 0;
         ps.reqType = 0;
         ps.argc = 0;
@@ -162,13 +173,79 @@ public class PandisClient {
         ps.replyBytes = 0;
         ps.oBufSoftLimitReachedTime = new Date(0);
         // 如果不是伪客户端，那么添加到服务器的客户端链表中
-        if (fd.isConnected()) {
+//        if (fd.isConnected()) {
             //TODO
-        }
+//        }
         // 初始化客户端的事务状态
         // TODO
         // 返回客户端
         return ps;
+    }
+
+    public ByteBuffer getSocketBuffer() {
+        return this.socketBuffer;
+    }
+
+    /**
+     * 从客户端对应的SocketChannel中读取数据到客户端的查询缓冲区
+     * @return 返回一个int值。返回值为-1表示客户端已经关闭连接，返回值为正数表示读取的字节数，0表示异常情况
+     */
+    public int readSocketData() {
+
+        int bytesCount = 0;
+        try {
+            this.socketBuffer.clear();
+            int byteRead = this.socketChannel.read(this.socketBuffer);
+
+            while (byteRead > 0) {
+                bytesCount += byteRead;
+
+                // 将读取的数据写入查询缓冲区
+                this.socketBuffer.flip();
+                while (this.socketBuffer.hasRemaining()) {
+                    this.tempQueryBuffer.append((char)this.socketBuffer.get());
+                }
+
+                this.socketBuffer.clear();
+                byteRead = this.socketChannel.read(this.socketBuffer);
+            };
+
+            // 正常读取了数据，直接返回
+            if (bytesCount > 0) {
+                return bytesCount;
+            }
+
+            // 客户端关闭连接，返回-1
+            if (byteRead == -1) {
+                return -1;
+            }
+
+        } catch (IOException e) {
+            logger.error("Read from SocketChannel error", e);
+        }
+
+        // 异常情况，返回0
+        return 0;
+    }
+
+    /**
+     * 处理查询缓冲区的数据
+     */
+    public void processInputBuffer() {
+        // TODO
+        System.out.println(this.tempQueryBuffer.toString());
+    }
+
+    public void distroy() {
+        try {
+            this.socketChannel.close();
+        } catch (IOException e) {
+            logger.warn("Close client socket error.");
+        }
+    }
+
+    public SocketChannel getSocketChannel() {
+        return socketChannel;
     }
 
 }

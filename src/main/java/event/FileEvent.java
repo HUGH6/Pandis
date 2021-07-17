@@ -1,5 +1,6 @@
 package event;
 
+import java.nio.channels.SelectionKey;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -78,10 +79,24 @@ public class FileEvent {
      * @param handler
      * @param clientData
      */
-    public void updateFileEvent(int interestOp, FileEventHandler handler, Object clientData) {
+    public void addFileEventHandler(int interestOp, FileEventHandler handler, Object clientData) {
         this.ops |= interestOp;
         this.eventHandlerMap.put(interestOp, handler);
         this.clientData = clientData;
+    }
+
+    public void removeFileEventHandler(int uninterestOp) {
+        this.ops ^= uninterestOp;
+        this.eventHandlerMap.remove(uninterestOp);
+    }
+
+    public boolean isEmptyFileEvent() {
+        boolean ans = true;
+        ans &= (((this.ops & SelectionKey.OP_ACCEPT) == SelectionKey.OP_ACCEPT) ? false : true);
+        ans &= (((this.ops & SelectionKey.OP_READ) == SelectionKey.OP_READ) ? false : true);
+        ans &= (((this.ops & SelectionKey.OP_WRITE) == SelectionKey.OP_WRITE) ? false : true);
+        ans &= (((this.ops & SelectionKey.OP_CONNECT) == SelectionKey.OP_CONNECT) ? false : true);
+        return ans;
     }
 
     // 由于FileEvent对象会放入到Map之类的容器中，
