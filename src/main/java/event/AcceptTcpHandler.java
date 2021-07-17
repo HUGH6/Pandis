@@ -1,7 +1,8 @@
-
 package event;
 
 import client.PandisClient;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import server.PandisServer;
 
 import java.io.IOException;
@@ -21,6 +22,8 @@ import java.nio.channels.SocketChannel;
  * @create: 2021-07-09
  */
 public class AcceptTcpHandler implements FileEventHandler{
+    private static Log logger = LogFactory.getLog(AcceptTcpHandler.class);
+
     private volatile static AcceptTcpHandler instance;
 
     private AcceptTcpHandler() {
@@ -68,14 +71,15 @@ public class AcceptTcpHandler implements FileEventHandler{
         PandisClient newClient = PandisClient.createClient(socketChannel);
         server.addClient(newClient);
 
-        // 将这个与客户端关连的socketChannel也注册到EventLoop, 其中，客户端对象client以事件的clientData传入，这里暂时以null代替
-//        try {
-//            server.getEventLoop().registerFileEvent(socketChannel, SelectionKey.OP_READ, ReadQueryFromClientHandler.getHandler(), null);
-//        } catch (ClosedChannelException e) {
-//            e.printStackTrace();
-//        }
+        logger.info("Accepted client connection from " + socketChannel.socket().getRemoteSocketAddress());
 
-        System.out.println("测试代码");
+        // 将这个与客户端关连的socketChannel也注册到EventLoop, 其中，客户端对象client以事件的clientData传入，这里暂时以null代替
+        try {
+            server.getEventLoop().registerFileEvent(socketChannel, SelectionKey.OP_READ, ReadQueryFromClientHandler.getHandler(), newClient);
+        } catch (ClosedChannelException e) {
+            e.printStackTrace();
+        }
+
         return true;
     }
 }

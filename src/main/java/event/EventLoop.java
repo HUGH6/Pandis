@@ -133,10 +133,27 @@ public class EventLoop {
         if (fileEvent == null) {
             fileEvent = new FileEvent(interestOp, handler, clientData);
         } else {
-            fileEvent.updateFileEvent(interestOp, handler, clientData);
+            fileEvent.addFileEventHandler(interestOp, handler, clientData);
         }
 
         registedFileEvents.put(selectionKey, fileEvent);
+    }
+
+    public void deleteFileEvent(SelectionKey key, int uninterestOp) {
+        FileEvent fileEvent = this.registedFileEvents.get(key);
+        if (fileEvent == null) {
+            return;
+        }
+
+        if ((fileEvent.getInterestSet() & uninterestOp) != uninterestOp) {
+            return;
+        }
+
+        fileEvent.removeFileEventHandler(uninterestOp);
+
+        if (fileEvent.isEmptyFileEvent()) {
+            this.registedFileEvents.remove(key);
+        }
     }
 
     public void registerTimeEvent(TimeEvent event) {

@@ -3,7 +3,10 @@ package server;
 import client.PandisClient;
 import event.AcceptTcpHandler;
 import event.EventLoop;
+import org.apache.commons.logging.LogFactory;
 import server.config.ServerConfig;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -21,10 +24,15 @@ import java.util.Set;
  * @create: 2021-07-04
  */
 public class PandisServer {
+
     private ServerConfig serverConfig;  // 服务端配置
     private EventLoop eventLoop;        // 事件循环
     private List<PandisClient> clients; // 保存了所有连接到服务器的客户端结构
     private static volatile PandisServer serverInstance; // 服务器实例
+
+    private volatile PandisClient currentClient;    // 当前客户端，仅用于奔溃报告
+
+    private Log logger = LogFactory.getLog(PandisServer.class);
 
     public PandisServer() {
         super();
@@ -94,6 +102,34 @@ public class PandisServer {
 
     public static PandisServer getInstance() {
         return serverInstance;
+    }
+
+    public synchronized void setCurrentClient(PandisClient client) {
+        this.currentClient = client;
+    }
+
+    public synchronized void clearCurrentClient() {
+        this.currentClient = null;
+    }
+
+    /**
+     * 销毁连接的客户端
+     * @param client
+     */
+    public void distroyClient(SelectionKey key, PandisClient client) {
+        if (this.currentClient.equals(client)) {
+            this.clearCurrentClient();
+        }
+
+        this.clients.remove(client);
+
+        if (client.getSocketChannel() != null) {
+            this.eventLoop.deleteFileEvent(key, SelectionKey.OP_READ);
+            this.eventLoop.deleteFileEvent(key, SelectionKey.OP_WRITE);
+            client.distroy();
+        }
+
+        logger.info("disconnect with client.");
     }
 }
 
