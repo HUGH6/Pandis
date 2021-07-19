@@ -1,9 +1,13 @@
 package client;
 
+import common.factory.PStringFactory;
+import common.store.PString;
 import common.store.Sds;
 import common.store.StoreObject;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import protocol.RequestProcessor;
+import protocol.RequestType;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -11,7 +15,6 @@ import java.nio.channels.SocketChannel;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
 
 /**
  * @ClassName PandisClient
@@ -39,8 +42,6 @@ public class PandisClient {
 
     // 查询缓冲区
     private Sds queryBuffer;
-    // 零时的缓冲区替代品
-    private StringBuilder tempQueryBuffer = new StringBuilder();
 
     // padis新增，用来从socketChannel中读取数据
     private ByteBuffer socketBuffer;
@@ -58,7 +59,7 @@ public class PandisClient {
     private PandisCommand cmd, lastCmd;
 
     // 请求的类型：内联命令还是多条命令
-    private int reqType;
+    private RequestType requestType;
 
     // 剩余未读取的命令内容数量
     private int multiBulkLen;       /* number of multi bulk arguments left to read */
@@ -159,8 +160,9 @@ public class PandisClient {
         ps.name = null;
         ps.bufPos = 0;
         ps.socketBuffer = ByteBuffer.allocate(8);
+        ps.queryBuffer = Sds.newEmptySds();
         ps.queryBufPeak = 0;
-        ps.reqType = 0;
+        ps.requestType = RequestType.NONE; // 请求类型，默认为0，表示没有类型
         ps.argc = 0;
         ps.argv = null;
         ps.cmd = ps.lastCmd = null;
@@ -203,7 +205,9 @@ public class PandisClient {
                 // 将读取的数据写入查询缓冲区
                 this.socketBuffer.flip();
                 while (this.socketBuffer.hasRemaining()) {
-                    this.tempQueryBuffer.append((char)this.socketBuffer.get());
+                    byte [] temp = new byte[this.socketBuffer.remaining()];
+                    this.socketBuffer.get(temp);
+                    this.queryBuffer.cat(temp);
                 }
 
                 this.socketBuffer.clear();
@@ -232,8 +236,37 @@ public class PandisClient {
      * 处理查询缓冲区的数据
      */
     public void processInputBuffer() {
-        // TODO
-        System.out.println(this.tempQueryBuffer.toString());
+        while (!this.queryBuffer.isEmpty()) {
+            // 这里可能需要对客户端的各种状态进行判断
+            // todo
+
+            // 判断请求的类型
+            // 两种类型的区别可以在 Redis 的通讯协议上查到：
+            // 简单来说，多条查询是一般客户端发送来的，
+            // 而内联查询则是 TELNET 发送来的
+            if (this.requestType != RequestType.NONE) {
+                if (this.queryBuffer.charAt(0) == '*') {
+                    // 多条查询
+                    this.requestType = RequestType.MULTI_BULK;
+                } else {
+                    // 内联查询
+                    this.requestType = RequestType.INLINE;
+                }
+            }
+
+            // 将缓冲区的数据转换命令及命令参数
+            if (this.requestType == RequestType.INLINE) {
+                if (!RequestProcessor.processInlineRequest(this)) {
+                    break;
+                }
+            } else if (this.requestType == RequestType.MULTI_BULK) {
+                if (!RequestProcessor.processMultiBulkRequest(this)) {
+                    break;
+                }
+            } else {
+                logger.error("Unknow request type");
+            }
+        }
     }
 
     public void distroy() {
@@ -247,5 +280,4 @@ public class PandisClient {
     public SocketChannel getSocketChannel() {
         return socketChannel;
     }
-
 }

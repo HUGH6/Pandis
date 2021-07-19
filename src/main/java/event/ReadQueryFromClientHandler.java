@@ -45,7 +45,6 @@ public class ReadQueryFromClientHandler implements FileEventHandler{
     @Override
     public boolean handle(PandisServer server, SelectionKey key, Object privateData) {
         PandisClient client = (PandisClient) privateData;
-        int readLength = PANDIS_IOBUF_LEN;
 
         // 设置服务器的当前客户端
         server.setCurrentClient(client);
