@@ -53,6 +53,29 @@ public class PString {
         this.free = _free;
         this.buf = _buf;
     }
+
+    /**
+     * PString工厂方法
+     * @param len
+     * @param free
+     * @param init
+     * @return
+     */
+    public static PString createPString(int len, int free, byte[] init) {
+        if(len < 0) {
+            throw new NegativeArraySizeException();
+        } else if (len > 2147483647){
+            throw new OutOfMemoryError("len is " + len + ", should be less than " + 2147483647);
+        } else {
+            if(init != null) {
+                byte[] ret = new byte[len];
+                System.arraycopy(init, 0, ret, 0, len);
+                return new PString(len, free, ret);
+            } else {
+                return new PString(len, free, null);
+            }
+        }
+    }
     /**
      * 根据给定的初始化字符串 init 和字符串长度 initlen
      * @param init 初始化字符串
@@ -346,6 +369,8 @@ public class PString {
         return cmp;
     }
 
+
+    // 调试使用，后期需要处理
     public void pStringPrintBuf() {
         byte[] buf = this.getBuf();
         int len = this.getLen();
