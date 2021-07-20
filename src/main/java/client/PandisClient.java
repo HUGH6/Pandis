@@ -275,6 +275,9 @@ public class PandisClient {
         }
     }
 
+    /**
+     * 销毁客户端，清理资源
+     */
     public void distroy() {
         try {
             this.socketChannel.close();
