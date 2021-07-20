@@ -14,6 +14,7 @@ import java.net.ServerSocket;
 import java.net.SocketAddress;
 import java.net.SocketOption;
 import java.nio.channels.*;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -33,6 +34,8 @@ public class PandisServer {
     private volatile PandisClient currentClient;    // 当前客户端，仅用于奔溃报告
 
     private Log logger = LogFactory.getLog(PandisServer.class);
+
+    private List<PandisDatabase> databases;
 
     public PandisServer() {
         super();
@@ -65,6 +68,10 @@ public class PandisServer {
         this.clients = new LinkedList<>();
 
         // 创建数据库
+        this.databases = new ArrayList<>(this.serverConfig.getDbNumber());
+        for (int i = 0; i < this.serverConfig.getDbNumber(); i++) {
+            this.databases.set(i, new PandisDatabase(i));
+        }
 
         // 打开TCP监听端口
         ServerSocketChannel serverSocketChannel = null;
@@ -76,7 +83,7 @@ public class PandisServer {
             e.printStackTrace();
         }
 
-        // 创建并初始化数据库
+        // 创建并初始化数据库;
 
         // 向事件循环中的监听模块注册事件
         // 为 TCP 连接关联连接应答（accept）处理器
@@ -130,6 +137,14 @@ public class PandisServer {
         }
 
         logger.info("disconnect with client.");
+    }
+
+    public ServerConfig getServerConfig() {
+        return this.serverConfig;
+    }
+
+    public List<PandisDatabase> getDatabases() {
+        return this.databases;
     }
 }
 
