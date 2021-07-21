@@ -24,6 +24,10 @@ public class StoreObject {
         this.lastVisitTime = System.currentTimeMillis();
     }
 
+    public Object getObj() {
+        return this.obj;
+    }
+
     @Override
     public int hashCode() {
         int code = 0;

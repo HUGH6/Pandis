@@ -6,10 +6,11 @@ package server.config;
  * @create: 2021-07-04
  */
 public class ServerConfig {
-    private String configfile;  // 配置文件路径
-    private int port;    // 服务器默认端口
-    private int hz; // serverCron每秒调用次数
-    private int dbNumber;   // 数据库数量
+    private String configfile;      // 配置文件路径
+    private int port;               // 服务器默认端口
+    private int hz;                 // serverCron每秒调用次数
+    private int dbNumber;           // 数据库数量
+    private String requirePassword; // 是否设置了密码
 
     public static final int DEFAULT_PORT = 6379;
     public static final int DEFAULT_DB_NUMBER = 16;
@@ -57,5 +58,13 @@ public class ServerConfig {
             this.dbNumber = dbNumber;
             return this;
         }
+    }
+
+    /**
+     * 获取是否设置了密码
+     * @return
+     */
+    public String getRequirePassword() {
+        return this.requirePassword;
     }
 }
