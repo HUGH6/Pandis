@@ -1,7 +1,9 @@
 package client;
 
-import common.factory.PStringFactory;
-import common.store.PString;
+import command.AbstractCommand;
+import command.Command;
+import command.CommandExecutor;
+import command.instance.AuthCommand;
 import common.store.Sds;
 import common.store.StoreObject;
 import org.apache.commons.logging.Log;
@@ -10,7 +12,6 @@ import protocol.RequestProcessor;
 import protocol.RequestType;
 import server.PandisDatabase;
 import server.PandisServer;
-import server.config.ServerConfig;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -58,7 +59,7 @@ public class PandisClient {
     private StoreObject[] argv;
 
     // 记录被客户端执行的命令
-    private PandisCommand cmd, lastCmd;
+    private AbstractCommand cmd, lastCmd;
 
     // 请求的类型：内联命令还是多条命令
     private RequestType requestType;
@@ -92,8 +93,7 @@ public class PandisClient {
 
     // 当 server.requirepass 不为 NULL 时
     // 代表认证的状态
-    // 0 代表未认证， 1 代表已认证
-//    int authenticated;      /* when requirepass is non-NULL */
+    boolean authenticated;
 
     // 复制状态
 //    int replstate;          /* replication state if this is a slave */
@@ -166,6 +166,8 @@ public class PandisClient {
         // 设置默认数据库
         ps.selectDatabase(PandisServer.getInstance().getDatabases().get(0), 0);
 
+        ps.authenticated = false;
+
         ps.name = null;
         ps.bufPos = 0;
         ps.queryBufPeak = 0;
@@ -190,9 +192,6 @@ public class PandisClient {
         return ps;
     }
 
-    public ByteBuffer getSocketBuffer() {
-        return this.socketBuffer;
-    }
 
     /**
      * 从客户端对应的SocketChannel中读取数据到客户端的查询缓冲区
@@ -276,6 +275,83 @@ public class PandisClient {
     }
 
     /**
+     * 处理从客户端数据中解析出的命令参数，执行相应的命令
+     *
+     * 这个函数执行时，我们已经读入了一个完整的命令到客户端，
+     * 这个函数负责执行这个命令，
+     * 或者服务器准备从客户端中进行一次读取。
+     */
+    public void processCommand() {
+        // 目前从客户端输入的数据中解析出了参数及其数量，argv、argc
+        // 但在实际执行相应命令前还要进行一些检查操作
+
+        // 单独处理quit命令
+        // if (argv[0].getObj().toString().equals("quit")) {
+        //    return;
+        // }
+
+        // (1)检查用户输入的命令名称是否可以找到对应命令实现，
+        // 如果找不到相应的命令实现，服务器不再执行后续步骤，并向客户端返回一个错误。
+        // (2)根据命令名称获得的命令实现，可以获得该命令arity属性，
+        // 检查命令请求所给定的参数个数是否正确，当参数个数不正确时，不再执行后续步骤，直接向客户端返回一个错误。
+        String commandName = argv[0].getObj().toString();
+        AbstractCommand command = CommandExecutor.lookupCommand(commandName);
+        if (command == null) {
+            // 没找到命令
+            // 回复错误信息
+            return;
+        } else if ((!command.isGreaterThanArity() && command.getArity() != argc) || argc < command.getArity()) {
+            // 参数个数错误
+            // 回复错误信息
+            return;
+        }
+
+        // (3)检查客户端是否已经通过了身份验证，
+        // 未通过身份验证的客户端只能执行AUTH命令，
+        // 如果未通过身份验证的客户端试图执行除AUTH命令之外的其他命令，那么服务器将向客户端返回一个错误。
+        if (PandisServer.getInstance().getServerConfig().getRequirePassword() != null
+            && !this.authenticated
+            && ! (command instanceof AuthCommand)) {
+            // 回复错误信息
+            return;
+        }
+
+        // (4) [暂时不实现]
+        // 如果服务器打开了maxmemory功能，
+        // 那么在执行命令之前，先检查服务器的内存占用情况，并在有需要时进行内存回收，从而使得接下来的命令可以顺利执行。
+        // 如果内存回收失败，那么不再执行后续步骤，向客户端返回一个错误。
+
+        // (5) [暂时不实现]
+        // 如果服务器上一次执行BGSAVE命令时出错，
+        // 并且服务器打开了stop-writes-on-bgsaveerror功能，
+        // 而且服务器即将要执行的命令是一个写命令，那么服务器将拒绝执行这个命令， 并向客户端返回一个错误。
+
+        // (6) [暂时不实现]
+        // 如果客户端当前正在用SUBSCRIBE命令订阅频道，或者正在用PSUBSCRIBE命令订阅模式，
+        // 那么服务器只会执行客户端发来的SUBSCRIBE、PSUBSCRIBE、UNSUBSCRIBE、 PUNSUBSCRIBE四个命令，其他命令都会被服务器拒绝。
+
+        // (7) [暂时不实现]
+        // 如果服务器正在进行数据载入，
+        // 那么客户端发送的命令必须带有l标识（比如INFO、 SHUTDOWN、PUBLISH等等）才会被服务器执行，其他命令都会被服务器拒绝。
+
+        // (8) [暂时不实现]
+        // 如果客户端正在执行事务，
+        // 那么服务器只会执行客户端发来的EXEC、DISCARD、 MULTI、WATCH四个命令，其他命令都会被放进事务队列中。
+
+        // (9) [暂时不实现]
+        // 如果服务器打开了监视器功能，那么服务器会将要执行的命令和参数等信息发送给监视器。
+
+        // 当完成了以上预备操作之后，服务器就可以开始真正执行命令了
+
+        // [暂时不实现] 判断是否是事务模式，如果是就将命令加入队列中
+        // 否则直接执行
+
+        CommandExecutor.execute(command);
+
+
+
+    }
+    /**
      * 销毁客户端，清理资源
      */
     public void distroy() {
@@ -298,6 +374,10 @@ public class PandisClient {
 
         this.database = database;
         this.databaseId = id;
+    }
+
+    public ByteBuffer getSocketBuffer() {
+        return this.socketBuffer;
     }
 
     public SocketChannel getSocketChannel() {
