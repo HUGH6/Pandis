@@ -16,4 +16,39 @@ public class StoreObject {
         this.obj = obj;
         this.lastVisitTime = System.currentTimeMillis();
     }
+
+    /**
+     * 更新对象的最近一次被访问时间
+     */
+    public void updateLastVisitTime() {
+        this.lastVisitTime = System.currentTimeMillis();
+    }
+
+    @Override
+    public int hashCode() {
+        int code = 0;
+        code = code * 31 + type.hashCode();
+        code = code * 31 + obj.hashCode();
+        code = code * 31 + (int)lastVisitTime;
+
+        return code;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == this) {
+            return true;
+        }
+
+        if (other == null) {
+            return false;
+        }
+
+        if (other instanceof StoreObject) {
+            StoreObject o = (StoreObject) other;
+            return o.type == this.type && this.obj.equals(o.obj) && this.lastVisitTime == o.lastVisitTime;
+        }
+
+        return false;
+    }
 }

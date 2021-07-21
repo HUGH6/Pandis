@@ -8,6 +8,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import protocol.RequestProcessor;
 import protocol.RequestType;
+import server.PandisDatabase;
+import server.PandisServer;
+import server.config.ServerConfig;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -32,10 +35,9 @@ public class PandisClient {
     private SocketChannel socketChannel;
 
     // 当前正在使用的数据库
-//     PandisDb db;
-
-    // 当前正在使用的数据库的 id （号码）
-//    int dictid;
+    private PandisDatabase database;
+    // 当前正在使用的数据库的id
+    private int databaseId;
 
     // 客户端的名字
     private StoreObject name;             /* As set by CLIENT SETNAME */
@@ -157,12 +159,16 @@ public class PandisClient {
 
         //初始化属性
         ps.socketChannel = socketChannel;
-        ps.name = null;
-        ps.bufPos = 0;
         ps.socketBuffer = ByteBuffer.allocate(8);
         ps.queryBuffer = Sds.newEmptySds();
-        ps.queryBufPeak = 0;
         ps.requestType = RequestType.NONE; // 请求类型，默认为0，表示没有类型
+
+        // 设置默认数据库
+        ps.selectDatabase(PandisServer.getInstance().getDatabases().get(0), 0);
+
+        ps.name = null;
+        ps.bufPos = 0;
+        ps.queryBufPeak = 0;
         ps.argc = 0;
         ps.argv = null;
         ps.cmd = ps.lastCmd = null;
@@ -269,12 +275,29 @@ public class PandisClient {
         }
     }
 
+    /**
+     * 销毁客户端，清理资源
+     */
     public void distroy() {
         try {
             this.socketChannel.close();
         } catch (IOException e) {
             logger.warn("Close client socket error.");
         }
+    }
+
+    /**
+     * 为客户端选择数据库
+     * @param database
+     * @param id
+     */
+    public void selectDatabase(PandisDatabase database, int id) {
+        if (id < 0 || id >= PandisServer.getInstance().getServerConfig().getDbNumber()) {
+            throw new IllegalArgumentException("the selected db id is " + id + ", out of the db number bounds.");
+        }
+
+        this.database = database;
+        this.databaseId = id;
     }
 
     public SocketChannel getSocketChannel() {
