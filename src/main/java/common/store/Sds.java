@@ -1,5 +1,6 @@
 package common.store;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 /**
@@ -252,7 +253,7 @@ public class Sds implements Comparable<Sds> {
     }
 
     public Sds cat(char[] c) {
-        Sds s = Sds.createSds(new String(c).getBytes());
+        Sds s = Sds.createSds(new String(c).getBytes(StandardCharsets.UTF_8));
         return this.cat(s, s.getLen());
     }
 
