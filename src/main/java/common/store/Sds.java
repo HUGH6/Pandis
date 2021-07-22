@@ -1,6 +1,10 @@
 package common.store;
 
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * 动态字符串
@@ -117,6 +121,157 @@ public class Sds implements Comparable<Sds> {
         return createSds(0, null);
     }
 
+
+    /**
+     * 将一行文本分割成多个参数
+     * @param line
+     * @return 函数返回一个 sds 数组
+     */
+
+    public static Sds[] splitSds(Sds line){
+        byte[] p = line.getBuf();
+        Sds current = null;
+        List<Sds> vector = new ArrayList<>();
+        int index = 0, length = p.length;
+        while(true){
+
+            while(index < length && Character.isWhitespace(p[index])){
+                index++;
+            }
+
+            if(index < length){
+                /* get a token */
+                boolean inq = false;  /* set to 1 if we are in "quotes" */
+                boolean insq = false; /* set to 1 if we are in 'single quotes' */
+                boolean done = false;
+
+                if (current == null) current = Sds.newEmptySds();
+
+                while(!done){
+                    if(inq){
+                        if((char)p[index] == '\\' && (char)p[index+1] == 'x'
+                                && isHexDigit((char)p[index+2]) && isHexDigit((char)p[index+3])){
+                             byte val = (byte)(hexDigitToInt((char)p[index+2])*16 + hexDigitToInt((char)p[index+3]));
+                             current.cat(new byte[]{val});
+                             index += 3;
+                        }else if((char)p[index] == '\\' && index + 1 < length){
+                            char c;
+                            index++;
+                            switch((char)p[index]) {
+                                case 'n': c = '\n'; break;
+                                case 'r': c = '\r'; break;
+                                case 't': c = '\t'; break;
+                                case 'b': c = '\b'; break;
+//                                case 'a': c = '\a'; break;
+                                default: c = (char)p[index]; break;
+                            }
+                            current.cat(new char[]{c});
+                        }else if((char)p[index] == '"'){
+                            if(index < length && !Character.isWhitespace(p[index+1])){
+                                return null;
+                            }
+                            done = true;
+                        }else if(index >= length){
+                            return null;
+                        }else{
+                            current.cat(new byte[]{p[index]});
+                        }
+                    }else if(insq){
+                        if((char)p[index] == '\\' && (char)p[index+1] == '\''){
+                            index++;
+                            current.cat(new byte[]{'\''});
+                        }else if((char)p[index] == '\''){
+                            if(index < length && !Character.isWhitespace(p[index])){
+                                return null;
+                            }
+                            done = true;
+                        }else if(index >= length){
+                            return null;
+                        }else{
+                            current.cat(new byte[]{p[index]});
+                        }
+                    }else{
+                        switch((char)p[index]) {
+                            case ' ':
+                            case '\n':
+                            case '\r':
+                            case '\t':
+                            case '\0':
+                                done = true;
+                                break;
+                            case '"':
+                                inq = true;
+                                break;
+                            case '\'':
+                                insq = true;
+                                break;
+                            default:
+                                current.cat(new byte[]{p[index]});
+                                break;
+                        }
+                    }
+                    if(index < length)index++;
+                }
+                vector.add(current);
+                current = null;
+            }else{
+                if(vector == null){
+                    return new Sds[0];
+                }
+                return vector.toArray(new Sds[vector.size()]);
+            }
+        }
+    }
+
+    /**
+     * 判断是否为16进制数
+     * @param c
+     * @return 如果 c 为十六进制符号的其中一个，返回正数
+     */
+     public static boolean isHexDigit(char c) {
+        return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') ||
+                (c >= 'A' && c <= 'F');
+     }
+
+    /**
+     * 将十六进制符号转换为 10 进制
+     * @param c
+     * @return
+     */
+    public static int hexDigitToInt(char c) {
+        switch(c) {
+            case '0': return 0;
+            case '1': return 1;
+            case '2': return 2;
+            case '3': return 3;
+            case '4': return 4;
+            case '5': return 5;
+            case '6': return 6;
+            case '7': return 7;
+            case '8': return 8;
+            case '9': return 9;
+            case 'a': case 'A': return 10;
+            case 'b': case 'B': return 11;
+            case 'c': case 'C': return 12;
+            case 'd': case 'D': return 13;
+            case 'e': case 'E': return 14;
+            case 'f': case 'F': return 15;
+            default: return 0;
+        }
+    }
+
+
+    /**
+     * 按索引对截取 sds 字符串的其中一段, start 和 end 都是闭区间（包含在内）
+     * 索引从 0 开始，最大为 sdslen(s) - 1, 索引可以是负数， sdslen(s) - 1 == -1
+     * @param s Sds 实例
+     * @param start 开始索引位置
+     * @param end 结束索引位置
+     */
+    public static void sdsRange(Sds s, int start, int end){
+        // todo
+    }
+
     /**
      * 复制 Sds 的副本
      * @return 创建成功返回输入 Sds 的副本
@@ -225,6 +380,22 @@ public class Sds implements Comparable<Sds> {
 
         return (char)this.buf[index];
     }
+
+    public int indexOf(int index, char c) {
+        byte byteC = (byte)c;
+        for (int i = index; i < this.len; i++) {
+            if (this.buf[i] == byteC) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    public int indexOf(char c) {
+        return indexOf(0, c);
+    }
+
     /**
      * 将长度为 len 的字符串 s 追加到 sds 的字符串末尾
      * 返回值
@@ -252,7 +423,7 @@ public class Sds implements Comparable<Sds> {
     }
 
     public Sds cat(char[] c) {
-        Sds s = Sds.createSds(new String(c).getBytes());
+        Sds s = Sds.createSds(new String(c).getBytes(StandardCharsets.UTF_8));
         return this.cat(s, s.getLen());
     }
 

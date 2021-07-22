@@ -17,6 +17,7 @@ public class StoreObject {
         this.lastVisitTime = System.currentTimeMillis();
     }
 
+
     /**
      * 更新对象的最近一次被访问时间
      */
