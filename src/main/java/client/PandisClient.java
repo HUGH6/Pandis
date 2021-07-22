@@ -50,11 +50,13 @@ public class PandisClient {
     // 客户端的名字
     private String name;
 
-
     // 参数数量
     private int argc;
+
     // 参数对象数组
     private StoreObject[] argv;
+
+
 
     // 记录被客户端执行的命令
     // private AbstractCommand cmd, lastCmd;
@@ -62,11 +64,14 @@ public class PandisClient {
     // 请求的类型：内联命令还是多条命令
     private RequestType requestType;
 
+
     // 剩余未读取的命令内容数量
     private int multiBulkLen;       /* number of multi bulk arguments left to read */
 
+
+
     // 命令内容的长度
-    private long bulkLen;           /* length of bulk argument in multi bulk request */
+    private int bulkLen;           /* length of bulk argument in multi bulk request */
 
     /*******************************************************************************
      * 服务器要发送给客户端的回复信息，都会先保存在对应客户端对象的回复缓冲区或回复列表中
@@ -173,15 +178,14 @@ public class PandisClient {
         ps.replyQueue = new LinkedList<>();
 
         // 设置默认数据库
-        ps.selectDatabase(PandisServer.getInstance().getDatabases().get(0), 0);
+        // ps.selectDatabase(PandisServer.getInstance().getDatabases().get(0), 0);
 
         ps.authenticated = false;
 
         ps.name = null;
         // ps.queryBufPeak = 0;
         ps.argc = 0;
-        ps.argv = null;
-        // ps.cmd = ps.lastCmd = null;
+        ps.argv = new StoreObject[0];
         ps.multiBulkLen = 0;
         ps.bulkLen = -1;
         ps.sentLen = 0;
@@ -512,4 +516,41 @@ public class PandisClient {
     public SocketChannel getSocketChannel() {
         return socketChannel;
     }
+
+    public Sds getQueryBuffer() {
+        return queryBuffer;
+    }
+
+    public void setArgc(int argc) {
+        this.argc = argc;
+    }
+
+    public void setArgv(StoreObject[] argv) {
+        this.argv = argv;
+    }
+
+    public void setQueryBuffer(Sds queryBuffer) {
+        this.queryBuffer = queryBuffer;
+    }
+
+    public int getMultiBulkLen() {
+        return multiBulkLen;
+    }
+
+    public void setMultiBulkLen(int multiBulkLen) {
+        this.multiBulkLen = multiBulkLen;
+    }
+
+    public int getBulkLen() {
+        return bulkLen;
+    }
+
+    public void setBulkLen(int bulkLen) {
+        this.bulkLen = bulkLen;
+    }
+
+    public StoreObject[] getArgv() {
+        return argv;
+    }
+
 }
