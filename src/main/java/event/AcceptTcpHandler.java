@@ -24,7 +24,7 @@ import java.nio.channels.SocketChannel;
 public class AcceptTcpHandler implements FileEventHandler{
     private static Log logger = LogFactory.getLog(AcceptTcpHandler.class);
 
-    private volatile static AcceptTcpHandler instance;
+    private static volatile AcceptTcpHandler instance;
 
     private AcceptTcpHandler() {
         super();
@@ -77,7 +77,7 @@ public class AcceptTcpHandler implements FileEventHandler{
         try {
             server.getEventLoop().registerFileEvent(socketChannel, SelectionKey.OP_READ, ReadQueryFromClientHandler.getHandler(), newClient);
         } catch (ClosedChannelException e) {
-            e.printStackTrace();
+            logger.info("Register event on channel" + socketChannel.toString() + "faild");
         }
 
         return true;

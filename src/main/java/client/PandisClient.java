@@ -1,13 +1,14 @@
 package client;
 
 import command.AbstractCommand;
-import command.Command;
 import command.CommandExecutor;
 import command.instance.AuthCommand;
 import common.store.Sds;
 import common.store.StoreObject;
+import event.SendApplyToClientHandler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import protocol.ReplyType;
 import protocol.RequestProcessor;
 import protocol.RequestType;
 import server.PandisDatabase;
@@ -15,25 +16,31 @@ import server.PandisServer;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
+import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.Date;
 import java.util.LinkedList;
-import java.util.List;
+import java.util.Queue;
 
 /**
- * @ClassName PandisClient
  * @Description PandisClient 保存了客户端当前的状态信息，以及执行相关功能时需要用到的数据结构
  * @Author huangyaohua
  * @Date 2021-07-11 19:52
- * @Version
  */
 public class PandisClient {
     private static Log logger = LogFactory.getLog(PandisClient.class);
 
-    private final int REDIS_REPLY_CHUNK_BYTES = 16*1024;
+    // 恢复缓冲区大小（16kb）
+    public static final int REPLY_CHUNK_BYTES = 16 * 1024;
 
     // 套接字描述符
     private SocketChannel socketChannel;
+    // pandis新增，用来从socketChannel中读取数据
+    private ByteBuffer socketBuffer;
+
+    // 查询缓冲区
+    private Sds queryBuffer;
 
     // 当前正在使用的数据库
     private PandisDatabase database;
@@ -41,25 +48,16 @@ public class PandisClient {
     private int databaseId;
 
     // 客户端的名字
-    private StoreObject name;             /* As set by CLIENT SETNAME */
+    private String name;
 
-    // 查询缓冲区
-    private Sds queryBuffer;
-
-    // padis新增，用来从socketChannel中读取数据
-    private ByteBuffer socketBuffer;
-
-    // 查询缓冲区长度峰值
-    private int queryBufPeak;   /* Recent (100ms or more) peak of querybuf size */
 
     // 参数数量
     private int argc;
-
     // 参数对象数组
     private StoreObject[] argv;
 
     // 记录被客户端执行的命令
-    private AbstractCommand cmd, lastCmd;
+    // private AbstractCommand cmd, lastCmd;
 
     // 请求的类型：内联命令还是多条命令
     private RequestType requestType;
@@ -70,8 +68,17 @@ public class PandisClient {
     // 命令内容的长度
     private long bulkLen;           /* length of bulk argument in multi bulk request */
 
-    // 回复链表
-    private List<StoreObject> reply;
+    /*******************************************************************************
+     * 服务器要发送给客户端的回复信息，都会先保存在对应客户端对象的回复缓冲区或回复列表中
+     * 当客户端的套接字可写时，调用写处理器，将换成的回复信息发送给客户端
+     * 回复消息优先缓存在缓冲区数组中，当缓冲区数组空间不足时，则存入队列中
+     *******************************************************************************/
+    // 回复缓冲区偏移量
+    private int replyBufferPos;
+    // 回复缓冲区
+    private char[] replyBuffer;
+    // 回复缓冲队列
+    private Queue<String> replyQueue;
 
     // 回复链表中对象的总大小
     private long replyBytes; /* Tot bytes of objects in reply list */
@@ -86,14 +93,17 @@ public class PandisClient {
     private Date lastInteraction; /* time of the last interaction, used for timeout */
 
     // 客户端的输出缓冲区超过软性限制的时间
-    private Date oBufSoftLimitReachedTime;
+    // private Date oBufSoftLimitReachedTime;
 
     // 客户端状态标志
     private int flags;              /* REDIS_SLAVE | REDIS_MONITOR | REDIS_MULTI ... */
 
     // 当 server.requirepass 不为 NULL 时
     // 代表认证的状态
-    boolean authenticated;
+    private boolean authenticated;
+
+    // 查询缓冲区长度峰值
+    // private int queryBufPeak;   /* Recent (100ms or more) peak of querybuf size */
 
     // 复制状态
 //    int replstate;          /* replication state if this is a slave */
@@ -144,13 +154,8 @@ public class PandisClient {
 //    list *pubsub_patterns;  /* patterns a client is interested in (SUBSCRIBE) */
 //    sds peerid;             /* Cached peer ID. */
 
-    /* Response buffer */
-    // 回复偏移量
-    int bufPos;
-    // 回复缓冲区
-    private char[] buf = new char[REDIS_REPLY_CHUNK_BYTES];
 
-    public static PandisClient createClient(SocketChannel socketChannel){
+    public static PandisClient createClient(SocketChannel socketChannel) {
         PandisClient ps = new PandisClient();
         // 当 fd 为 true 时，创建带网络连接的客户端
         // 如果 fd 为 false 时 ，那么创建无网络连接的伪客户端
@@ -163,25 +168,27 @@ public class PandisClient {
         ps.queryBuffer = Sds.newEmptySds();
         ps.requestType = RequestType.NONE; // 请求类型，默认为0，表示没有类型
 
+        ps.replyBufferPos = 0;
+        ps.replyBuffer = new char[REPLY_CHUNK_BYTES];
+        ps.replyQueue = new LinkedList<>();
+
         // 设置默认数据库
         ps.selectDatabase(PandisServer.getInstance().getDatabases().get(0), 0);
 
         ps.authenticated = false;
 
         ps.name = null;
-        ps.bufPos = 0;
-        ps.queryBufPeak = 0;
+        // ps.queryBufPeak = 0;
         ps.argc = 0;
         ps.argv = null;
-        ps.cmd = ps.lastCmd = null;
+        // ps.cmd = ps.lastCmd = null;
         ps.multiBulkLen = 0;
         ps.bulkLen = -1;
         ps.sentLen = 0;
         ps.flags = 0;
         ps.createTime = ps.lastInteraction = new Date();
-        ps.reply = new LinkedList<>();
         ps.replyBytes = 0;
-        ps.oBufSoftLimitReachedTime = new Date(0);
+        // ps.oBufSoftLimitReachedTime = new Date(0);
         // 如果不是伪客户端，那么添加到服务器的客户端链表中
 //        if (fd.isConnected()) {
             //TODO
@@ -347,10 +354,132 @@ public class PandisClient {
         // 否则直接执行
 
         CommandExecutor.execute(command);
-
-
-
     }
+
+    /*******************************************************************************
+     * 以下方法用于将服务器的回复信息写入客户端结构的回复缓冲区和缓冲队列
+     *******************************************************************************/
+
+    /**
+     * 这个函数在每次向客户端发送数据时都会被调用。
+     *
+     * 函数的行为如下：
+     * (1)
+     * 当客户端可以接收新数据时（通常情况下都是这样），函数返回 true，
+     * 并将写处理器（write handler）注册到事件循环中，
+     * 这样当套接字可写时，新数据就会被写入。
+     *
+     * (2)
+     * 对于那些不应该接收新数据的客户端，比如伪客户端、 master 以及未 ONLINE 的 slave ，
+     * 或者写处理器安装失败时，
+     * 函数返回 false 。
+     *
+     * (3)
+     * 通常在每个回复被创建时调用，如果函数返回 false ，
+     * 那么没有数据会被追加到输出缓冲区。
+     *
+     * @return 操作是否成功
+     */
+    public boolean prepareClientToWrite() {
+        // [暂时不实现] LUA 脚本环境所使用的伪客户端总是可写的
+        // TODO
+
+        // [暂时不实现] 客户端是主服务器并且不接受查询，那么它是不可写的，出错
+        // TODO
+
+        // 无连接的伪客户端总是不可写的
+        if (this.socketChannel == null) {
+            return false;
+        }
+
+        // 一般情况，为客户端套接字安装写处理器到事件循环
+        try {
+            PandisServer
+                .getInstance()
+                .getEventLoop()
+                .registerFileEvent(this.socketChannel,
+                                    SelectionKey.OP_WRITE,
+                                    SendApplyToClientHandler.getHandler(),
+                                    this);
+        } catch (ClosedChannelException e) {
+            logger.warn("Register write event on channel " + this.socketChannel.toString() + "failed");
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * [待完善]
+     * 向回复缓冲区写入指定类型的消息
+     * @param replyType 回复类型
+     * @param message 消息
+     */
+    public void addReply(ReplyType replyType, String message) {
+        String reply = replyType.buildReplyByTemplate(message);
+        addReply(reply);
+    }
+
+    /**
+     * 将回复数据写入到客户端的回复缓冲区或者回复队列中，为服务器向客户端发送回复做准备
+     * @param message
+     */
+    public void addReply(String message) {
+        // 为客户端注册写处理器到事件循环中
+        if (!prepareClientToWrite()) {
+            return;
+        }
+
+        // 将回复消息写入客户端缓冲区或缓冲队列
+        if (!addReplyToBuffer(message)) {
+            addReplyToQueue(message);
+        }
+    }
+
+    /**
+     * 将回复信息缓存到客户端的回复缓冲区中
+     * @param message 回复信息
+     * @return 写入是否成功
+     */
+    private boolean addReplyToBuffer(String message) {
+        // 计算回复缓冲区空余空间
+        long avalible = this.replyBuffer.length - this.replyBufferPos;
+
+        // 计算客户端状态
+        // 如果正准备关闭客户端，无须再发送内容
+        // TODO
+
+        // 如果回复链表里已经有内容，再添加内容到回复缓冲区里面就是错误了
+        if (this.replyQueue.size() > 0) {
+            return false;
+        }
+
+        // 回复缓冲区的空间必须满足
+        if (message.length() > avalible) {
+            return false;
+        }
+
+        // 复制message到回复缓冲区里面
+        System.arraycopy(message.toCharArray(), 0, this.replyBuffer, this.replyBufferPos, message.length());
+        this.replyBufferPos += message.length();
+
+        return true;
+    }
+
+    /**
+     * 将回复消息写入回复缓冲队列
+     * @param message
+     */
+    private void addReplyToQueue(String message) {
+        // 计算客户端状态
+        // 如果正准备关闭客户端，无须再发送内容
+        // TODO
+
+        this.replyQueue.add(message);
+    }
+//    public boolean addReply(String) {
+//
+//    }
+
     /**
      * 销毁客户端，清理资源
      */

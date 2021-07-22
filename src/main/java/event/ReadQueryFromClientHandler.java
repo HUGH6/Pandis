@@ -5,10 +5,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import server.PandisServer;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
-import java.nio.channels.SocketChannel;
 
 /**
  * 读取客户端的查询缓冲区内容
@@ -17,7 +14,8 @@ import java.nio.channels.SocketChannel;
  */
 public class ReadQueryFromClientHandler implements FileEventHandler{
     private static Log logger = LogFactory.getLog(ReadQueryFromClientHandler.class);
-    private volatile static ReadQueryFromClientHandler instance;
+
+    private static volatile ReadQueryFromClientHandler instance;
 
     private ReadQueryFromClientHandler() {
         super();
