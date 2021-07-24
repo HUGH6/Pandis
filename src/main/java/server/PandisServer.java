@@ -38,7 +38,7 @@ public class PandisServer {
 
     private Log logger = LogFactory.getLog(PandisServer.class);
 
-    private List<PandisDatabase> databases;
+    private PandisDatabase [] databases;
 
     public PandisServer() {
         super();
@@ -84,9 +84,9 @@ public class PandisServer {
         this.clients = new LinkedList<>();
 
         // 创建数据库
-        this.databases = new ArrayList<>(this.serverConfig.getDbNumber());
+        this.databases = new PandisDatabase[this.serverConfig.getDbNumber()];
         for (int i = 0; i < this.serverConfig.getDbNumber(); i++) {
-            this.databases.set(i, new PandisDatabase(i));
+            this.databases[i] = new PandisDatabase(i);
         }
 
         // 打开TCP监听端口
@@ -221,7 +221,7 @@ public class PandisServer {
         return this.serverConfig;
     }
 
-    public List<PandisDatabase> getDatabases() {
+    public PandisDatabase[] getDatabases() {
         return this.databases;
     }
 

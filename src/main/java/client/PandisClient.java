@@ -260,7 +260,7 @@ public class PandisClient {
             // 两种类型的区别可以在 Redis 的通讯协议上查到：
             // 简单来说，多条查询是一般客户端发送来的，
             // 而内联查询则是 TELNET 发送来的
-            if (this.requestType != RequestType.NONE) {
+            if (this.requestType == RequestType.NONE) {
                 if (this.queryBuffer.charAt(0) == '*') {
                     // 多条查询
                     this.requestType = RequestType.MULTI_BULK;
