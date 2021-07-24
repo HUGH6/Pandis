@@ -8,6 +8,9 @@ import server.config.ServerConfig;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -35,7 +38,7 @@ public class PandisServer {
 
     private Log logger = LogFactory.getLog(PandisServer.class);
 
-    private List<PandisDatabase> databases;
+    private PandisDatabase [] databases;
 
     public PandisServer() {
         super();
@@ -46,8 +49,21 @@ public class PandisServer {
 
         PandisServer.serverInstance = server;
 
-        // 初始化服务器配置
+        // 初始化服务器默认配置
         server.initServerConfig();
+
+        // 解析命令行参数
+        String options = server.parsingCommandLineArgs(args);
+
+        // 如果命令行参数中指定了配置文件，那么就从配置文件加载配置，配置文件的配置会覆盖同名默认配置
+        if (server.getServerConfig().getConfigfile() != null) {
+            server.loadServerConfigFromFile(server.getServerConfig().getConfigfile());
+        }
+        // 如果命令行中显式地设置来配置参数，那么命令行配置又会覆盖已有配置
+        // 配置优先级：命令行配置 > 配置文件 > 默认配置
+        if (options != null) {
+            server.loadServerConfigFromString(options);
+        }
 
         // 初始化服务器
         server.initServer();
@@ -68,9 +84,9 @@ public class PandisServer {
         this.clients = new LinkedList<>();
 
         // 创建数据库
-        this.databases = new ArrayList<>(this.serverConfig.getDbNumber());
+        this.databases = new PandisDatabase[this.serverConfig.getDbNumber()];
         for (int i = 0; i < this.serverConfig.getDbNumber(); i++) {
-            this.databases.set(i, new PandisDatabase(i));
+            this.databases[i] = new PandisDatabase(i);
         }
 
         // 打开TCP监听端口
@@ -97,6 +113,68 @@ public class PandisServer {
 
     private void initServerConfig() {
         this.serverConfig = ServerConfig.build();
+    }
+
+    private void loadServerConfigFromFile(String filePath) {
+        this.serverConfig.loadConfigFromFile(filePath);
+    }
+
+    private void loadServerConfigFromString(String options) {
+        this.serverConfig.loadConfigFromString(options);
+    }
+
+    /**
+     * 解析命令行参数
+     * @param args
+     */
+    private String parsingCommandLineArgs(String [] args) {
+        if (args.length == 0) {
+            return null;
+        }
+
+        StringBuilder options = new StringBuilder();
+        int index = 0;
+
+        // 处理特殊选项 -h、-v
+        if ("-v".equals(args[0]) || "--version".equals(args[0])) {
+
+        }
+
+        if ("-h".equals(args[0]) || "--help".equals(args[0])) {
+
+        }
+
+        /**
+         * 判断第一个参数是否是配置文件
+         * 如果想使用配置文件，必须在命令行第一个参数指定配置文件路径
+         * 如果第一个参数不是以"--"开头，那么应该是一个配置文件
+         */
+        if (args[index].charAt(0) != '-' && args[index].charAt(1) != '-') {
+            this.getServerConfig().setConfigfile(args[index]);
+            index++;
+        }
+
+
+        /**
+         * 对用户给定的其余选项进行分析，并将分析所得的字符串追加稍后载入的配置文件的内容之后
+         * 比如 --port 6380 会被分析为 "port 6380\n"
+         */
+        while (index < args.length) {
+            if (args[index].charAt(0) == '-' && args[index].charAt(1) == '-') {
+                if (options.length() > 0) {
+                    options.append("\n");
+                }
+                options.append(args[index].substring(2));
+                options.append(" ");
+            } else {
+                options.append(args[index]);
+                options.append(" ");
+            }
+
+            index++;
+        }
+
+        return options.toString();
     }
 
     public  EventLoop getEventLoop() {
@@ -143,8 +221,16 @@ public class PandisServer {
         return this.serverConfig;
     }
 
-    public List<PandisDatabase> getDatabases() {
+    public PandisDatabase[] getDatabases() {
         return this.databases;
+    }
+
+    private void version() {
+
+    }
+
+    private void usage() {
+
     }
 }
 
