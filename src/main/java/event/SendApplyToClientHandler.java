@@ -1,10 +1,13 @@
 package event;
 
+import client.PandisClient;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import server.PandisServer;
 
+import javax.xml.crypto.Data;
 import java.nio.channels.SelectionKey;
+import java.util.Date;
 
 /**
  * @description: 将客户端回复缓冲区内的内容发送给客户端
@@ -34,6 +37,7 @@ public class SendApplyToClientHandler implements FileEventHandler{
 
     /**
      * 将客户端回复缓冲区内的内容发送给客户端
+     * buf -> channel
      * @param server
      * @param key
      * @param privateData
@@ -41,7 +45,25 @@ public class SendApplyToClientHandler implements FileEventHandler{
      */
     @Override
     public boolean handle(PandisServer server, SelectionKey key, Object privateData) {
-        logger.info("测试：服务器发送回复给客户端");
+        PandisClient client = (PandisClient) privateData;
+
+        // 设置服务器的当前客户端
+        server.setCurrentClient(client);
+
+        // 读入内容到查询缓冲区
+        int writeNum = client.writeSocketData();
+
+        if(writeNum > 0) {
+            // 正确写入类数据
+            client.setLastInteraction(new Date());
+        }
+        if(client.getReplyBufferPos() == 0 && client.getReplyQueue().isEmpty()) {
+            client.setSentLen(0);
+            server.distroyClient(key, client);
+        }
+
+        server.clearCurrentClient();
+
         return true;
     }
 }
