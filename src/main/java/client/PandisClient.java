@@ -62,7 +62,7 @@ public class PandisClient {
     // private AbstractCommand cmd, lastCmd;
 
     // 请求的类型：内联命令还是多条命令
-    private RequestType requestType;
+    private volatile RequestType requestType;
 
 
     // 剩余未读取的命令内容数量
@@ -261,7 +261,7 @@ public class PandisClient {
             // 简单来说，多条查询是一般客户端发送来的，
             // 而内联查询则是 TELNET 发送来的
             if (this.requestType == RequestType.NONE) {
-                if (this.queryBuffer.charAt(0) == '*') {
+                if (this.queryBuffer.charAt(0) == RequestType.MULTI_BULK_PREFIX) {
                     // 多条查询
                     this.requestType = RequestType.MULTI_BULK;
                 } else {

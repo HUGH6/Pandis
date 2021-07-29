@@ -11,7 +11,7 @@ import java.util.Arrays;
 
 
 /**
- * @description:
+ * @description: 该类负责解析客户端发送来的查询请求
  * @author: huzihan
  * @create: 2021-07-19
  */
@@ -22,11 +22,10 @@ public class RequestProcessor {
 
     /**
      * 处理内联查询格式
-     * @param client
-     * @return
+     * @param client 缓存请求数据的客户端
+     * @return 解析是否成功
      */
     public static boolean processInlineRequest(PandisClient client) {
-
         int argc = 0, queryLen, indexLast;
         Sds aux;
         Sds[] argv;
@@ -36,9 +35,10 @@ public class RequestProcessor {
         indexLast = queryBuffer.indexOf('\n');
 
         // 收到的查询内容不符合协议内容，出错
-        if(indexLast == -1){
+        if(indexLast == -1) {
             if(queryBuffer.getLen() > PANDIS_INLINE_MAX_SIZE){
-                // todo 错误处理 ， Protocol error: too big inline request
+                client.addReply(ReplyType.ERROR, "Protocol error: too big inline request");
+                // todo 错误处理 ，
             }
             return false;
         }
@@ -78,8 +78,8 @@ public class RequestProcessor {
 
     /**
      * 处理多条查询格式
-     * @param client
-     * @return
+     * @param client 缓存请求数据的客户端
+     * @return 解析是否成功
      */
     public static boolean processMultiBulkRequest(PandisClient client) {
         // Todo
