@@ -3,6 +3,7 @@ package client;
 import command.AbstractCommand;
 import command.CommandExecutor;
 import command.instance.AuthCommand;
+import common.store.PString;
 import common.store.Sds;
 import common.store.StoreObject;
 import event.SendApplyToClientHandler;
@@ -78,12 +79,24 @@ public class PandisClient {
      * 当客户端的套接字可写时，调用写处理器，将换成的回复信息发送给客户端
      * 回复消息优先缓存在缓冲区数组中，当缓冲区数组空间不足时，则存入队列中
      *******************************************************************************/
+
+    // 服务器内存限制
+    public static final int REDIS_MAX_WRITE_PER_EVENT = 1024 * 64;
     // 回复缓冲区偏移量
     private int replyBufferPos;
+
+    public int getReplyBufferPos() {
+        return this.replyBufferPos;
+    }
+
     // 回复缓冲区
     private char[] replyBuffer;
     // 回复缓冲队列
     private Queue<String> replyQueue;
+
+    public Queue<String> getReplyQueue() {
+        return this.replyQueue;
+    }
 
     // 回复链表中对象的总大小
     private long replyBytes; /* Tot bytes of objects in reply list */
@@ -91,18 +104,27 @@ public class PandisClient {
     // 已发送字节，处理 short write 用
     private int sentLen;            /* Amount of bytes already sent in the current buffer or object being sent. */
 
+    public void setSentLen(int _sentLen) {
+        this.sentLen = _sentLen;
+    }
     // 创建客户端的时间
     private Date createTime;           /* Client creation time */
 
     // 客户端最后一次和服务器互动的时间
     private Date lastInteraction; /* time of the last interaction, used for timeout */
 
+    public void setLastInteraction(Date date) {
+        this.lastInteraction = date;
+    }
     // 客户端的输出缓冲区超过软性限制的时间
     // private Date oBufSoftLimitReachedTime;
 
     // 客户端状态标志
     private int flags;              /* REDIS_SLAVE | REDIS_MONITOR | REDIS_MULTI ... */
 
+    public int getFlags() {
+        return this.flags;
+    }
     // 当 server.requirepass 不为 NULL 时
     // 代表认证的状态
     private boolean authenticated;
@@ -247,6 +269,103 @@ public class PandisClient {
         // 异常情况，返回0
         return 0;
     }
+
+    /**
+     * 将缓冲区数据写入客户端对应的SocketChannel  buf->channel
+     * @return 返回一个int值。返回值为-1表示客户端已经关闭连接，返回值为正数表示写入的字节数，0表示异常情况
+     */
+    public int writeSocketData() {
+        int nWritten = 0, totWritten = 0, headStrLen, objMem;
+        try {
+            while(this.replyBufferPos > 0 || !this.replyQueue.isEmpty()) {
+                if(this.replyBufferPos > 0) {
+                    // process buffer data frist
+                    // 等待发送的数据先放入socketBuffer
+                    String newDataStr = "";
+                    char[] cs = this.replyBuffer;
+                    for(int i = 0; i < this.replyBufferPos; i++) {
+                        newDataStr += String.valueOf(cs[i]);
+                    }
+                    byte[] newDataBytes = newDataStr.getBytes();
+                    // socketBuffer作为辅助buf
+                    this.socketBuffer.clear();
+                    this.socketBuffer.put(newDataBytes);
+
+                    // 接下来通过socketBuffer向channel中写数据
+                    this.socketBuffer.flip();
+                    // todo 能否一次读完
+                    while(this.socketBuffer.hasRemaining()) {
+                        nWritten += this.socketChannel.write(this.socketBuffer);
+                    }
+
+                    if(nWritten <= 0) {
+                        throw new IOException();
+                    }
+                    this.sentLen += nWritten;
+                    totWritten += nWritten;
+
+                    if(this.sentLen == this.replyBufferPos) {
+                        this.replyBufferPos = 0;
+                        this.sentLen = 0;
+                    }
+
+                } else {
+                    // 操作字符串队列
+                    String headStr = this.replyQueue.peek();
+                    headStrLen = headStr.length();
+                    byte[] headBytes = headStr.getBytes();
+                    objMem = headStr.getBytes().length;
+
+                    if(headStrLen == 0) {
+                        this.replyQueue.poll();
+                        this.replyBytes -= objMem;
+                        continue;
+                    }
+
+                    // 将需要写入的数据先写入辅助buf 通过buf写入到channel
+                    this.socketBuffer.clear();
+                    this.socketBuffer.put(headBytes);
+
+                    this.socketBuffer.flip();
+                    // todo 能否一次读完
+                    while(this.socketBuffer.hasRemaining()) {
+                        nWritten += this.socketChannel.write(this.socketBuffer);
+                    }
+
+                    if(nWritten <= 0) {
+                        throw new IOException();
+                    }
+                    this.sentLen += nWritten;
+                    totWritten += nWritten;
+
+                    // 删除已经读取的数据
+                    if(this.sentLen == headStrLen) {
+                        this.replyQueue.poll();
+                        this.sentLen = 0;
+                        this.replyBytes -= objMem;
+                    }
+
+                }
+
+                if(totWritten > REDIS_MAX_WRITE_PER_EVENT) {
+                    throw new IOException();
+                }
+            }
+
+            if(nWritten > 0) {
+                return nWritten;
+            }
+            if(nWritten < 0) {
+                return -1;
+            }
+        } catch (IOException e) {
+            logger.error("Write to SocketChannel error", e);
+        }
+
+        // 异常情况，返回0
+        return 0;
+    }
+
 
     /**
      * 处理查询缓冲区的数据
