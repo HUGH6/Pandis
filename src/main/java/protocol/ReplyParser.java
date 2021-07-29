@@ -1,6 +1,5 @@
 package protocol;
 
-import common.store.Sds;
 import utils.SafeEncoder;
 
 import java.util.ArrayList;
@@ -13,11 +12,6 @@ import java.util.List;
  * @Date 2021/7/27
  **/
 public class ReplyParser {
-
-
-    public ReplyParser() {
-    }
-
     /**
      * 解析整数类型回复
      * @param bytes
@@ -114,7 +108,8 @@ public class ReplyParser {
             int len = (int)parseInteger(bytes, index, end);
 
             if (len < 0) {
-                return null;
+                Reply reply = new Reply(ReplyType.NIL, "nil", 5);
+                return reply;
             }
 
             // 跳过$n这里的\r\n
@@ -169,7 +164,6 @@ public class ReplyParser {
         }
         return null;
     }
-
 
     /**
      * 找到从start位置开始往后的第一个分割符\r\n
@@ -232,8 +226,6 @@ public class ReplyParser {
                 break;
             }
         }
-
         return negative ? -1 * value : value;
     }
-
 }

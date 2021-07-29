@@ -2,6 +2,8 @@ package cli;
 
 import common.ErrorType;
 import common.store.Sds;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import protocol.Protocol;
 import protocol.Reply;
 import protocol.ReplyParser;
@@ -11,7 +13,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.Arrays;
 
 /**
  * @Description
@@ -19,6 +20,7 @@ import java.util.Arrays;
  * @Date 2021/7/25
  **/
 public class ClientContext {
+    private static final Log logger = LogFactory.getLog(ClientContext.class);
 
     private ErrorType err;
     private String errInfo;
@@ -39,13 +41,15 @@ public class ClientContext {
     }
 
     public void connectTcp(String ip, int port) {
-        System.out.println("测试：连接"+ip+":"+port);
         try {
             this.socket = new Socket(ip, port);
             // 设置socket的keepalive
             this.socket.setKeepAlive(true);
+
+            logger.info("Connect to server " + ip + ":" + port);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.fatal("Could not connect to Redis at " + ip + ":" + port + " Connection refused", e);
+            System.exit(1);
         }
     }
 
@@ -124,8 +128,13 @@ public class ClientContext {
 
         try {
             InputStream inputStream = this.socket.getInputStream();
-            while ((readNum = inputStream.read(buf)) != -1) {
+            readNum = inputStream.read(buf);
+            while (readNum != -1) {
                 this.replyBuffer.cat(buf, 0, readNum);
+                if (readNum < buf.length) {
+                    break;
+                }
+                readNum = inputStream.read(buf);
             }
         } catch (IOException e) {
             e.printStackTrace();

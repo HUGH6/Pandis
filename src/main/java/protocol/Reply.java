@@ -9,10 +9,10 @@ import java.util.List;
  **/
 public class Reply {
     private ReplyType type;                         // 回复类型
-    private int parseByteLength;                         // 解析的回复信息总共的字节长度
+    private int parseByteLength;                    // 解析的回复信息总共的字节长度
     private String stringReplyContent;              // 存放error、status、bulk类型的回复的实际内容
     private long integerReplyContent;               // 存放integer类型回复的实际内容
-    private List<String> multiStringReplyContent;   // 存放multibulk类型回复的实际内容
+    private List<String> multiStringReplyContent;   // 存放multi-bulk类型回复的实际内容
 
     public Reply(ReplyType type, String str, int len) {
         this.type = type;
@@ -54,10 +54,16 @@ public class Reply {
     }
 
     public String getStringReplyContent() {
+        if (this.type != ReplyType.ERROR && this.type != ReplyType.STATUS && this.type != ReplyType.BULK) {
+            throw new IllegalStateException();
+        }
         return this.stringReplyContent;
     }
 
     public List<String> getMultiStringReplyContent() {
+        if (this.type != ReplyType.MULTI_BULK) {
+            throw new IllegalStateException();
+        }
         return this.multiStringReplyContent;
     }
 }

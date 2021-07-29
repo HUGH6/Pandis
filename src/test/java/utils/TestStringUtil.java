@@ -35,4 +35,18 @@ public class TestStringUtil {
         String [] res5 = StringUtil.splitArgs(test5);
         System.out.println(Arrays.toString(res5));
     }
+
+    @Test
+    public void testToQuoted() {
+        String test1 = "\t\rset a 1 ";
+        String test2 = "set a \"hello world \\x1a \\n\"";
+        String test3 = "set a 'good \tmorning '";
+        String test4 = "set a \"hh hh";
+        String test5 = "set a 'ss ss";
+
+
+        String res1 = StringUtil.toQuoted(test1);
+        System.out.println(res1);
+
+    }
 }

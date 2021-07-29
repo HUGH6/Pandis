@@ -1,6 +1,5 @@
 package server.config;
 
-import com.sun.security.ntlm.Server;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import utils.StringUtil;

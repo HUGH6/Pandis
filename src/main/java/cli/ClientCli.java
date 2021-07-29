@@ -1,14 +1,11 @@
 package cli;
 
 import protocol.Reply;
-import protocol.ReplyType;
 import utils.StringUtil;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
-
-import static protocol.ReplyType.*;
 
 /**
  * @Description 客户端cli
@@ -16,17 +13,13 @@ import static protocol.ReplyType.*;
  * @Date 2021/7/24
  **/
 public class ClientCli {
-    private ClientConfig config;
-    private ClientContext context;
-
+    private ClientConfig config;    // 客户端配置
+    private ClientContext context;  // 客户端运行上下文
 
     public ClientCli() {
+        // 初始化默认配置
+        // 运行上下文会在客户端与服务器建立连接时创建
         config = new ClientConfig();
-    }
-
-
-    private void initHelp() {
-
     }
 
     private int parseOption(String [] args) {
@@ -37,9 +30,9 @@ public class ClientCli {
             if ("-h".equals(args[index]) && !lastarg) {
                 config.setHostip(args[++index]);
             } else if ("-h".equals(args[index]) && lastarg) {
-                usage();
+                ClientCliHelper.printUsage();
             } else if ("--help".equals(args[index])) {
-                usage();
+                ClientCliHelper.printUsage();
             } else if ("-x".equals(args[index])) {
                 config.setStdinarg(true);
             } else if ("-p".equals(args[index]) && !lastarg) {
@@ -91,7 +84,7 @@ public class ClientCli {
             } else if ("-d".equals(args[index]) && !lastarg) {
                 config.setMbDelim(args[++index]);
             } else if ("-v".equals(args[index]) || "--version".equals(args[index])) {
-                System.out.print("pandis-cli " + cliVersion() + "\n");
+                System.out.print("pandis-cli " + getCliVersion() + "\n");
                 System.exit(0);
             } else {
                 if (args[index].charAt(0) == '-') {
@@ -103,122 +96,23 @@ public class ClientCli {
                 }
             }
         }
-
         return index;
-    }
-
-    /**
-     * 打印使用说明
-     */
-    private void usage() {
-        StringBuilder usage = new StringBuilder();
-
-        usage.append("pandis-cli\n");
-        usage.append("\n");
-        usage.append("Usage: pandis-cli [OPTIONS] [cmd [arg [arg ...]]]\n");
-        usage.append("  -h <hostname>      Server hostname (default: 127.0.0.1).\n");
-        usage.append("  -p <port>          Server port (default: 6379).\n");
-        usage.append("  -s <socket>        Server socket (overrides hostname and port).\n");
-        usage.append("  -a <password>      Password to use when connecting to the server.\n");
-        usage.append("  -r <repeat>        Execute specified command N times.\n");
-        usage.append("  -i <interval>      When -r is used, waits <interval> seconds per command.\n");
-        usage.append("                     It is possible to specify sub-second times like -i 0.1.\n");
-        usage.append("  -n <db>            Database number.\n");
-        usage.append("  -x                 Read last argument from STDIN.\n");
-        usage.append("  -d <delimiter>     Multi-bulk delimiter in for raw formatting (default: \\n).\n");
-        usage.append("  -c                 Enable cluster mode (follow -ASK and -MOVED redirections).\n");
-        usage.append("  --raw              Use raw formatting for replies (default when STDOUT is\n");
-        usage.append("                     not a tty).\n");
-        usage.append("  --csv              Output in CSV format.\n");
-        usage.append("  --latency          Enter a special mode continuously sampling latency.\n");
-        usage.append("  --latency-history  Like --latency but tracking latency changes over time.\n");
-        usage.append("                     Default time interval is 15 sec. Change it using -i.\n");
-        usage.append("  --slave            Simulate a slave showing commands received from the master.\n");
-        usage.append("  --rdb <filename>   Transfer an RDB dump from remote server to local file.\n");
-        usage.append("  --pipe             Transfer raw Redis protocol from stdin to server.\n");
-        usage.append("  --pipe-timeout <n> In --pipe mode, abort with error if after sending all data.\n");
-        usage.append("                     no reply is received within <n> seconds.\n");
-        usage.append("                     Default timeout: %d. Use 0 to wait forever.\n");
-        usage.append("  --bigkeys          Sample Redis keys looking for big keys.\n");
-        usage.append("  --scan             List all keys using the SCAN command.\n");
-        usage.append("  --pattern <pat>    Useful with --scan to specify a SCAN pattern.\n");
-        usage.append("  --intrinsic-latency <sec> Run a test to measure intrinsic system latency.\n");
-        usage.append("                     The test will run for the specified amount of seconds.\n");
-        usage.append("  --eval <file>      Send an EVAL command using the Lua script at <file>.\n");
-        usage.append("  --help             Output this help and exit.\n");
-        usage.append("  --version          Output version and exit.\n");
-        usage.append("\n");
-        usage.append("Examples:\n");
-        usage.append("  cat /etc/passwd | redis-cli -x set mypasswd\n");
-        usage.append("  redis-cli get mypasswd\n");
-        usage.append("  redis-cli -r 100 lpush mylist x\n");
-        usage.append("  redis-cli -r 100 -i 1 info | grep used_memory_human:\n");
-        usage.append("  redis-cli --eval myscript.lua key1 key2 , arg1 arg2 arg3\n");
-        usage.append("  redis-cli --scan --pattern '*:12345*'\n");
-        usage.append("\n");
-        usage.append("  (Note: when using --eval the comma separates KEYS[] from ARGV[] items)\n");
-        usage.append("\n");
-        usage.append("When no command is given, redis-cli starts in interactive mode.\n");
-        usage.append("Type \"help\" in interactive mode for information on available commands.\n");
-        usage.append("\n");
-
-        System.err.print(usage.toString());
-        System.exit(1);
-    }
-
-    private String cliVersion() {
-        return "0.0.1";
-    }
-
-    private ClientContext connect(String hostip, int hostport) {
-        ClientContext context = new ClientContext();
-        context.connectTcp(hostip, hostport);
-        return context;
-    }
-
-    private ClientContext connectUnix(String hostsocket) {
-        //
-        return null;
     }
 
     private boolean cliConnect(boolean force) {
         if (this.context == null || force) {
-            if (this.config.getHostsocket() == null) {
-                this.context = connect(this.config.getHostip(), this.config.getHostport());
-            } else {
-                this.context = connectUnix(this.config.getHostsocket());
-            }
-
-//            if (context->err) {
-//                fprintf(stderr,"Could not connect to Redis at ");
-//                if (config.hostsocket == NULL)
-//                    fprintf(stderr,"%s:%d: %s\n",config.hostip,config.hostport,context->errstr);
-//                else
-//                    fprintf(stderr,"%s: %s\n",config.hostsocket,context->errstr);
-//                redisFree(context);
-//                context = NULL;
-//                return REDIS_ERR;
-//            }
-
+            this.context = new ClientContext();
+            this.context.connectTcp(this.config.getHostip(), this.config.getHostport());
 
             // 判断是否认证了以及是否选择的正确的db
-            if (!cliAuth()) {
-                return false;
-            }
-            if (!cliSelect()) {
-                return false;
-            }
+            // if (!cliAuth()) {
+            //     return false;
+            // }
 
+            // if (!cliSelect()) {
+            //     return false;
+            // }
         }
-
-        return true;
-    }
-
-    private boolean cliAuth() {
-         return true;
-    }
-
-    private boolean cliSelect() {
         return true;
     }
 
@@ -229,180 +123,7 @@ public class ClientCli {
         if (this.context == null) {
             return;
         }
-
         System.err.println("Error: " + this.context.getErrInfo());
-    }
-
-    private void outputHelp() {
-        // todo: 输出帮助信息
-        System.out.println("Warning: 该命令未实现");
-    }
-
-    private Reply getReply() {
-        return this.context.getReply();
-    }
-
-    private boolean readReply(boolean outputRawString) {
-        boolean output = true;
-        StringBuilder out = new StringBuilder();
-
-        Reply reply = getReply();
-
-        // 如果获取回复失败
-        if (reply == null) {
-            if (this.config.isShutdown()) {
-                return true;
-            }
-
-            printContextError();
-            System.exit(1);
-            return false;
-        }
-
-        // todo: Check if we need to connect to a different node and reissue the request.
-
-        // 是否输出
-        if (output) {
-            // 以raw字符串格式输出
-            if (outputRawString) {
-                out.append(formatReplyRaw(reply));
-            } else {
-                // 判断以什么格式输出回复结果
-                if (this.config.getOutputType() == ClientConfig.OutputType.OUTPUT_RAW) {
-                    out.append(formatReplyRaw(reply));
-                    out.append("\n");
-                } else if (this.config.getOutputType() == ClientConfig.OutputType.OUTPUT_STANDARD) {
-                    out.append(formatReplyTTY(reply));
-                } else if (this.config.getOutputType() == ClientConfig.OutputType.OUTPUT_CSV) {
-                    out.append(formatReplyCSV(reply));
-                    out.append("\n");
-                }
-            }
-
-            System.out.println(out.toString());
-        }
-        return true;
-    }
-
-    private String formatReplyRaw(Reply reply) {
-        StringBuilder out = new StringBuilder();
-
-        switch (reply.getType()) {
-            case ERROR:
-                out.append(reply.getStringReplyContent());
-                out.append("\n");
-                break;
-            case STATUS:
-            case BULK:
-                out.append(reply.getStringReplyContent());
-                break;
-            case INTEGER:
-                out.append(String.valueOf(reply.getIntegerReplyContent()));
-                break;
-            case MULTI_BULK:
-                List<String> contents = reply.getMultiStringReplyContent();
-                int len = contents.size();
-                for (int i = 0; i < len; i++) {
-                    if (i > 0) {
-                        out.append(this.config.getMbDelim());
-                    }
-                    out.append(contents.get(i));
-                }
-                break;
-            default:
-                System.err.println("Unknown reply type");
-                System.exit(1);
-        }
-        return out.toString();
-    }
-
-    private String formatReplyTTY(Reply reply) {
-        StringBuilder out = new StringBuilder();
-
-        switch (reply.getType()) {
-            case ERROR:
-                out.append("(error) ");
-                out.append(reply.getStringReplyContent());
-                out.append("\n");
-                break;
-            case STATUS:
-                out.append(reply.getStringReplyContent());
-                out.append("\n");
-                break;
-            case BULK:
-                out.append(reply.getStringReplyContent());
-                out.append("\n");
-                break;
-            case NIL:
-                out.append("(nil)\n");
-                break;
-            case INTEGER:
-                out.append("(integer) ");
-                out.append(String.valueOf(reply.getIntegerReplyContent()));
-                out.append("\n");
-                break;
-            case MULTI_BULK:
-                List<String> contents = reply.getMultiStringReplyContent();
-                int len = contents.size();
-
-                if (len == 0) {
-                    out.append("(empty list or set)\n");
-                } else {
-                    for (int i = 0; i < len; i++) {
-                        out.append(i);
-                        out.append(") ");
-                        out.append(contents.get(i));
-                        out.append("\n");
-                    }
-                }
-                break;
-            default:
-                System.err.println("Unknown reply type");
-                System.exit(1);
-        }
-        return null;
-    }
-
-    private String formatReplyCSV(Reply reply) {
-        StringBuilder out = new StringBuilder();
-
-        switch (reply.getType()) {
-            case ERROR:
-                out.append("ERROR, ");
-                out.append("\"");
-                out.append(reply.getStringReplyContent());
-                out.append("\"");
-                break;
-            case STATUS:
-                out.append("\"");
-                out.append(reply.getStringReplyContent());
-                out.append("\"");
-                break;
-            case BULK:
-                out.append("\"");
-                out.append(reply.getStringReplyContent());
-                out.append("\"");
-                break;
-            case INTEGER:
-                out.append(String.valueOf(reply.getIntegerReplyContent()));
-                break;
-            case MULTI_BULK:
-                List<String> contents = reply.getMultiStringReplyContent();
-                int len = contents.size();
-                for (int i = 0; i < len; i++) {
-                    out.append("\"");
-                    out.append(contents.get(i));
-                    out.append("\"");
-                    if (i != len - 1) {
-                        out.append(", ");
-                    }
-                }
-                break;
-            default:
-                System.err.println("Unknown reply type");
-                System.exit(1);
-        }
-        return out.toString();
     }
 
     /**
@@ -425,7 +146,7 @@ public class ClientCli {
 
         // 帮助命令
         if ("help".equals(command) || "?".equals(command)) {
-            outputHelp();
+            ClientCliHelper.printHelpInfo(Arrays.copyOfRange(argv, 1, argv.length));
             return true;
         }
 
@@ -490,11 +211,182 @@ public class ClientCli {
             }
 
             System.out.flush();
-
             repeat--;
         }
-
         return true;
+    }
+
+    /**
+     * 读取服务器回复信息
+     * @param outputRawString
+     * @return
+     */
+    private boolean readReply(boolean outputRawString) {
+        boolean output = true;
+        StringBuilder out = new StringBuilder();
+
+        Reply reply = this.context.getReply();
+
+        // 如果获取回复失败
+        if (reply == null) {
+            if (this.config.isShutdown()) {
+                return true;
+            }
+
+            printContextError();
+            System.exit(1);
+            return false;
+        }
+
+        // todo: Check if we need to connect to a different node and reissue the request.
+
+        // 是否输出
+        if (output) {
+            // 以raw字符串格式输出
+            if (outputRawString) {
+                out.append(formatReplyRaw(reply));
+            } else {
+                // 判断以什么格式输出回复结果
+                if (this.config.getOutputType() == ClientConfig.OutputType.OUTPUT_RAW) {
+                    out.append(formatReplyRaw(reply));
+                    out.append("\n");
+                } else if (this.config.getOutputType() == ClientConfig.OutputType.OUTPUT_STANDARD) {
+                    out.append(formatReplyTTY(reply));
+                } else if (this.config.getOutputType() == ClientConfig.OutputType.OUTPUT_CSV) {
+                    out.append(formatReplyCSV(reply));
+                    out.append("\n");
+                }
+            }
+            System.out.print(out.toString());
+        }
+        return true;
+    }
+
+    private String formatReplyRaw(Reply reply) {
+        StringBuilder out = new StringBuilder();
+
+        switch (reply.getType()) {
+            case ERROR:
+                out.append(reply.getStringReplyContent());
+                out.append("\n");
+                break;
+            case STATUS:
+            case BULK:
+                out.append(reply.getStringReplyContent());
+                break;
+            case INTEGER:
+                out.append(String.valueOf(reply.getIntegerReplyContent()));
+                break;
+            case MULTI_BULK:
+                List<String> contents = reply.getMultiStringReplyContent();
+                int len = contents.size();
+                for (int i = 0; i < len; i++) {
+                    if (i > 0) {
+                        out.append(this.config.getMbDelim());
+                    }
+                    out.append(contents.get(i));
+                }
+                break;
+            default:
+                System.err.println("Unknown reply type");
+                System.exit(1);
+        }
+        return out.toString();
+    }
+
+    private String formatReplyTTY(Reply reply) {
+        StringBuilder out = new StringBuilder();
+
+        switch (reply.getType()) {
+            case ERROR:
+                out.append("(error) ");
+                out.append(reply.getStringReplyContent());
+                out.append("\n");
+                break;
+            case STATUS:
+                out.append(reply.getStringReplyContent());
+                out.append("\n");
+                break;
+            case BULK:
+                out.append(StringUtil.toQuoted(reply.getStringReplyContent()));
+                out.append("\n");
+                break;
+            case NIL:
+                out.append("(nil)\n");
+                break;
+            case INTEGER:
+                out.append("(integer) ");
+                out.append(String.valueOf(reply.getIntegerReplyContent()));
+                out.append("\n");
+                break;
+            case MULTI_BULK:
+                List<String> contents = reply.getMultiStringReplyContent();
+                int len = contents.size();
+
+                if (len == 0) {
+                    out.append("(empty list or set)\n");
+                } else {
+                    for (int i = 0; i < len; i++) {
+                        out.append(i + 1);
+                        out.append(") ");
+                        out.append(contents.get(i));
+                        out.append("\n");
+                    }
+                }
+                break;
+            default:
+                System.err.println("Unknown reply type");
+                System.exit(1);
+        }
+        return out.toString();
+    }
+
+    private String formatReplyCSV(Reply reply) {
+        StringBuilder out = new StringBuilder();
+
+        switch (reply.getType()) {
+            case ERROR:
+                out.append("ERROR, ");
+                out.append("\"");
+                out.append(reply.getStringReplyContent());
+                out.append("\"");
+                break;
+            case STATUS:
+                out.append("\"");
+                out.append(reply.getStringReplyContent());
+                out.append("\"");
+                break;
+            case BULK:
+                out.append("\"");
+                out.append(reply.getStringReplyContent());
+                out.append("\"");
+                break;
+            case INTEGER:
+                out.append(String.valueOf(reply.getIntegerReplyContent()));
+                break;
+            case MULTI_BULK:
+                List<String> contents = reply.getMultiStringReplyContent();
+                int len = contents.size();
+                for (int i = 0; i < len; i++) {
+                    out.append("\"");
+                    out.append(contents.get(i));
+                    out.append("\"");
+                    if (i != len - 1) {
+                        out.append(", ");
+                    }
+                }
+                break;
+            default:
+                System.err.println("Unknown reply type");
+                System.exit(1);
+        }
+        return out.toString();
+    }
+
+
+
+    private String getCliVersion() {
+        return "0.0.1";
     }
 
     /**
@@ -503,16 +395,14 @@ public class ClientCli {
      */
     private void runReplMode() {
         Scanner scanner = new Scanner(System.in);
-
         String line = null;
         String [] argv = null;
+
         while ((line = scanner.nextLine())!= null) {
             line = line.trim();
             if (line.length() > 0) {
                 // 分割参数，注意:可以允许“a b c”这种用引号括起来的表示一个整体的形式，这种应该作为一个整体
                 argv = StringUtil.splitArgs(line);
-
-                System.out.println("测试 输入命令为：" + Arrays.toString(argv));
 
                 if (argv == null) {
                     System.out.print("Invalid argument(s)\n");
@@ -529,7 +419,8 @@ public class ClientCli {
                         // todo: redis中这是实现了清屏功能，但java中貌似不方便实现，暂时不实现
                         System.out.println("Warning: 暂时未实现该命令");
                     } else {
-                        long startTime = System.currentTimeMillis(), elapsed = 0;
+                        long startTime = System.currentTimeMillis();
+                        long elapsed = 0;
 
                         // 因为命令第一个参数有可能是表示执行次数的数字，所以这里需要判断
                         int repeat = 1;     // 命令重复次数，默认为1
@@ -569,14 +460,17 @@ public class ClientCli {
                 }
             }
         }
-
         System.exit(0);
-
     }
 
+    /**
+     * cli客户端主入口
+     * @param args
+     */
     public static void main(String [] args) {
+        // 初始化CLI及其默认配置
         ClientCli cli = new ClientCli();
-
+        // 解析输入参数
         cli.parseOption(args);
 
         /* Latency mode */
@@ -644,10 +538,8 @@ public class ClientCli {
             // todo: intrinsicLatencyMode();
         }
 
-        /* Start interactive mode when no command is provided */
+        // 当没有提供任何参数时，以交互模式启动
         if (args.length == 0 && cli.config.getEval() == null) {
-            /* Note that in repl mode we don't abort on connection error.
-             * A new attempt will be performed for every command send. */
             cli.cliConnect(false);
             cli.runReplMode();
         }

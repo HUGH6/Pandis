@@ -206,4 +206,41 @@ public class StringUtil {
         Matcher matcher = Pattern.compile("^[-+]?[0-9]+$").matcher(str);
         return matcher.find();
     }
+
+    public static String toQuoted(String str) {
+        StringBuilder sb = new StringBuilder();
+        int len = str.length();
+        int index = 0;
+        sb.append("\"");
+
+        while (index < len) {
+            char c = str.charAt(index);
+            switch (c) {
+                case '\\':
+                case '"':
+                    sb.append("\\");
+                    sb.append(c);
+                    break;
+                case '\n':
+                    sb.append("\\n");
+                    break;
+                case '\r':
+                    sb.append("\\r");
+                    break;
+                case '\t':
+                    sb.append("\\r");
+                    break;
+                case '\b':
+                    sb.append("\\b");
+                    break;
+                default:
+                    sb.append(c);
+            }
+            index++;
+        }
+
+        sb.append("\"");
+
+        return sb.toString();
+    }
 }
