@@ -428,14 +428,28 @@ public class Sds implements Comparable<Sds> {
     }
 
     public Sds cat(byte[] bytes) {
-        this.expand(bytes.length);
+        return cat(bytes, 0, bytes.length);
+    }
 
-        for(int i = this.len; i < this.len + bytes.length; i++) {
-            this.buf[i] = bytes[i - this.len];
+    public Sds cat(byte[] bytes, int start, int length) {
+        if (bytes == null) {
+            throw new IllegalArgumentException("Argumment 'bytes' can not be null");
         }
 
-        this.setFree(this.buf.length - len - bytes.length);
-        this.setLen(len + bytes.length);
+        if (start < 0 || start >= bytes.length) {
+            throw new ArrayIndexOutOfBoundsException();
+        }
+
+        length = Math.min(length, bytes.length - start);
+
+        this.expand(length);
+
+        for(int i = this.len; i < this.len + length; i++) {
+            this.buf[i] = bytes[start + i - this.len];
+        }
+
+        this.setFree(this.buf.length - len - length);
+        this.setLen(len + length);
 
         return this;
     }

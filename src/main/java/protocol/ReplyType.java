@@ -59,6 +59,11 @@ public enum ReplyType {
 
             return message.toString();
         }
+    },
+    NIL {
+        public String buildReplyByTemplate(String args) {
+            return null;
+        }
     };      // 多行字符串回复
 
     public static final String ERROR_PREFIX = "-ERR ";

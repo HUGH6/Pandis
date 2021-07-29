@@ -3,6 +3,7 @@ package server.config;
 import com.sun.security.ntlm.Server;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import utils.StringUtil;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -102,7 +103,7 @@ public class ServerConfig {
             }
 
             // 将字符串分割成多个参数
-            String [] argv = line.split("\\s+");
+            String [] argv = StringUtil.splitArgs(line);
             if (argv == null) {
                 logger.fatal("Unbalanced quotes in configuration line");
                 System.exit(1);

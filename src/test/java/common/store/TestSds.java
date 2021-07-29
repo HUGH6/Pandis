@@ -58,4 +58,17 @@ public class TestSds {
 
 
     }
+
+    @Test
+    public void testCat1() {
+        byte [] str = {'a','b','c', 'd'};
+        Sds s1 = Sds.createSds(str);
+
+        byte [] str2 = {'e','f','g','h'};
+
+        Assert.assertEquals("abcdefgh", s1.cat(str2).toString());
+        Assert.assertEquals("abcdefghefgh", s1.cat(str2, 0, 4).toString());
+        Assert.assertEquals("abcdefghefghfg", s1.cat(str2, 1, 2).toString());
+        Assert.assertEquals("abcdefghefghfgfgh", s1.cat(str2, 1, 8).toString());
+    }
 }
