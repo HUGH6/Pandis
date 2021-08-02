@@ -99,7 +99,7 @@ public class StringUtil {
                             // 遇到转义的单引号，将其加入字符串中
                             index++;
                             current.append("'");
-                        }  else if (index >= length) {
+                        } else if (index >= length) {
                             // 这个判断必须在最前面，防止数组越界
                             // 如果没有解析到右侧的引号就到字符串末尾了，说明是格式错误
                             return null;
@@ -150,12 +150,10 @@ public class StringUtil {
                 list.add(current.toString());
                 current = null;
             } else {
-                if (list.size() == 0) {
+                if (list == null || list.size() == 0) {
                     return null;
                 } else {
-                    int resultSize = list.size();
-                    String [] result = new String[resultSize];
-                    return list.toArray(result);
+                    return list.toArray(new String[list.size()]);
                 }
             }
         }

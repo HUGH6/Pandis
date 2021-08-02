@@ -10,9 +10,9 @@ import protocol.ReplyParser;
 import utils.SafeEncoder;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.Socket;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 
 /**
  * @Description
@@ -24,7 +24,8 @@ public class ClientContext {
 
     private ErrorType err;
     private String errInfo;
-    private Socket socket;
+    private SocketChannel socketChannel;
+    private ByteBuffer socketBuffer;    // 用于辅助socketChannel读写网络数据
     private int flags;
     private StringBuilder outBuffer;    // 要发送的命令都存储在这里
     private Sds replyBuffer;            // 回复缓冲区
@@ -33,7 +34,8 @@ public class ClientContext {
     public ClientContext() {
         this.err = null;
         this.errInfo = null;
-        this.socket = null;
+        this.socketChannel = null;
+        this.socketBuffer = ByteBuffer.allocate(1024 * 16);
         this.flags = 0;
         this.outBuffer = new StringBuilder();
         this.replyBuffer = Sds.newEmptySds();
@@ -42,9 +44,11 @@ public class ClientContext {
 
     public void connectTcp(String ip, int port) {
         try {
-            this.socket = new Socket(ip, port);
+            this.socketChannel = SocketChannel.open();
+            this.socketChannel.connect(new InetSocketAddress(ip, port));
+            this.socketChannel.configureBlocking(false);
             // 设置socket的keepalive
-            this.socket.setKeepAlive(true);
+            this.socketChannel.socket().setKeepAlive(true);
 
             logger.info("Connect to server " + ip + ":" + port);
         } catch (IOException e) {
@@ -105,12 +109,28 @@ public class ClientContext {
 
         if (this.outBuffer.length() > 0) {
             try {
-                OutputStream outputStream = this.socket.getOutputStream();
-                outputStream.write(SafeEncoder.encode(this.outBuffer.toString()));
-                outputStream.flush();
+                byte [] data = SafeEncoder.encode(this.outBuffer.toString());
                 this.outBuffer.delete(0, this.outBuffer.length());
+
+                int dataIndex = 0;
+                int writeNum = 0;
+                while (dataIndex < data.length) {
+                    this.socketBuffer.clear();
+                    int length = Math.min(data.length - dataIndex, 1024 * 16);
+                    this.socketBuffer.put(data, dataIndex, length);
+
+                    this.socketBuffer.flip();
+
+                    writeNum = this.socketChannel.write(this.socketBuffer);
+
+                    while (this.socketBuffer.hasRemaining()) {
+                        writeNum = this.socketChannel.write(this.socketBuffer);
+                    }
+
+                    dataIndex += length;
+                }
             } catch (IOException e) {
-                e.printStackTrace();
+                logger.error("Write command to server error", e);
                 return false;
             }
         }
@@ -118,30 +138,57 @@ public class ClientContext {
         return true;
     }
 
+    /**
+     * 从socket中读取服务器的回复信息
+     * @return 读取成功返回true，发生错误或没有读到数据返回false
+     */
     public boolean read() {
-        if (this.err != null) {
-            return false;
-        }
-
-        byte [] buf = new byte[1024 * 16];
-        int readNum = 0;
+        int readSum = 0;    // 读取的总字符数量，用于判断本次读取是否有读到内容
+        int readNum = 0;    // readNum用于判断单次read是否成功
+        this.socketBuffer.clear();
 
         try {
-            InputStream inputStream = this.socket.getInputStream();
-            readNum = inputStream.read(buf);
+            readNum = this.socketChannel.read(this.socketBuffer);
+            // 由于不知道服务器回复有多长，buf一次能否存下，因此需要循环调用read读取
+            // readNum == -1表示服务器发送完数据并关闭了连接
             while (readNum != -1) {
-                this.replyBuffer.cat(buf, 0, readNum);
-                if (readNum < buf.length) {
+                // 特殊情况需要判断
+                // 1.当前时刻没有数据可读了
+                // 2.buf满了
+                if (readNum == 0) {
                     break;
                 }
-                readNum = inputStream.read(buf);
+
+                // 将读取到的内容存入缓冲区
+                this.socketBuffer.flip();
+                while (this.socketBuffer.hasRemaining()) {
+                    this.replyBuffer.append(this.socketBuffer.get());
+                }
+                // 统计总共读取字节长度
+                readSum += readNum;
+
+                this.socketBuffer.clear();
+                readNum = this.socketChannel.read(this.socketBuffer);
             }
         } catch (IOException e) {
-            e.printStackTrace();
-            return false;
+            logger.error("Happen err when read reply data from server", e);
+
+            // 发生异常前依然读到了数据
+            if (readSum > 0) {
+                return true;
+            } else {
+                return false;
+            }
         }
 
-        return true;
+        // 根据最后一次读取的返回值判断返回情况
+        if (readNum == -1) {
+            // todo: 可能需要特殊处理关闭连接
+        } else if (readNum == 0) {
+            // 正常情况，读到stream末尾
+        }
+
+        return readSum > 0 ?true : false;
     }
 
     public Reply parseItem() {
@@ -193,10 +240,13 @@ public class ClientContext {
         if (reply != null) {
             return reply;
         } else {
+            // 先向服务器发送命令
             if (write()) {
-                if (read()) {
-                    reply = getReplyFromBuffer();
+                // 然后从服务器读取命令的回复
+                // 必须要读到信息才返回，不然会一直在这里尝试读取
+                while (!read()) {
                 }
+                reply = getReplyFromBuffer();
             }
 
             return reply;

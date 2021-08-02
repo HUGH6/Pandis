@@ -1,3 +1,9 @@
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Locale;
@@ -11,17 +17,28 @@ import java.util.regex.Pattern;
  * @create: 2021-07-17
  */
 public class Main {
-    public static void main(String[] args) {
-        char a = ' ';
-        switch (a) {
-            case 'd':
-                System.out.println(1);
-                break;
-            default:
-                System.out.println(2);
-                break;
+    public static void main(String[] args) throws IOException, InterruptedException {
+        SocketChannel sc = SocketChannel.open();
+        sc.connect(new InetSocketAddress("127.0.0.1", 6379));
+        sc.configureBlocking(false);
+        sc.socket().setKeepAlive(true);
+
+        ByteBuffer buf = ByteBuffer.allocate(1024*16);
+
+        int n = sc.read(buf);
+
+        while (n != -1) {
+            System.out.println("youshuru");
+            buf.flip();
+            buf.clear();
+
+            n = sc.read(buf);
         }
 
-        String b = "a";
+        System.out.println(n);
+
+        while(true) {
+            Thread.sleep(1000);
+        }
     }
 }

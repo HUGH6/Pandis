@@ -1,6 +1,7 @@
-package event;
+package event.handler;
 
 import client.PandisClient;
+import event.FileEventHandler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import server.PandisServer;
@@ -12,7 +13,7 @@ import java.nio.channels.SelectionKey;
  * @author: huzihan
  * @create: 2021-07-16
  */
-public class ReadQueryFromClientHandler implements FileEventHandler{
+public class ReadQueryFromClientHandler implements FileEventHandler {
     private static Log logger = LogFactory.getLog(ReadQueryFromClientHandler.class);
 
     private static volatile ReadQueryFromClientHandler instance;
@@ -60,6 +61,9 @@ public class ReadQueryFromClientHandler implements FileEventHandler{
         } else if (readNum == 0) {
             logger.error("客户端数据读取异常");
         }
+
+        // test
+        client.addReply(":2\r\n");
 
         server.clearCurrentClient();
         return true;

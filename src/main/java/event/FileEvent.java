@@ -86,7 +86,7 @@ public class FileEvent {
     }
 
     public void removeFileEventHandler(int uninterestOp) {
-        this.ops ^= uninterestOp;
+        this.ops = this.ops & ~uninterestOp;
         this.eventHandlerMap.remove(uninterestOp);
     }
 

@@ -1,6 +1,7 @@
-package event;
+package event.handler;
 
 import client.PandisClient;
+import event.FileEventHandler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import server.PandisServer;
@@ -21,7 +22,7 @@ import java.nio.channels.SocketChannel;
  * @author: huzihan
  * @create: 2021-07-09
  */
-public class AcceptTcpHandler implements FileEventHandler{
+public class AcceptTcpHandler implements FileEventHandler {
     private static Log logger = LogFactory.getLog(AcceptTcpHandler.class);
 
     private static volatile AcceptTcpHandler instance;
@@ -74,11 +75,7 @@ public class AcceptTcpHandler implements FileEventHandler{
         logger.info("Accepted client connection from " + socketChannel.socket().getRemoteSocketAddress());
 
         // 将这个与客户端关连的socketChannel也注册到EventLoop, 其中，客户端对象client以事件的clientData传入，这里暂时以null代替
-        try {
-            server.getEventLoop().registerFileEvent(socketChannel, SelectionKey.OP_READ, ReadQueryFromClientHandler.getHandler(), newClient);
-        } catch (ClosedChannelException e) {
-            logger.info("Register event on channel" + socketChannel.toString() + "faild");
-        }
+        server.getEventLoop().registerFileEvent(socketChannel, SelectionKey.OP_READ, ReadQueryFromClientHandler.getHandler(), newClient);
 
         return true;
     }

@@ -16,7 +16,7 @@ import java.nio.charset.StandardCharsets;
  * @Date 2021-07-22 17:16
  * @Version
  */
-public class TestRequestProcessor {
+public class TestRequestParser {
     @Test
     public void testProcessInlineRequest() {
         Sds s = Sds.createSds("SET msg hello \r\n ".getBytes(StandardCharsets.UTF_8));

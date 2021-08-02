@@ -1,11 +1,11 @@
-package event;
+package event.handler;
 
 import client.PandisClient;
+import event.FileEventHandler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import server.PandisServer;
 
-import javax.xml.crypto.Data;
 import java.nio.channels.SelectionKey;
 import java.util.Date;
 
@@ -14,7 +14,7 @@ import java.util.Date;
  * @author: huzihan
  * @create: 2021-07-22
  */
-public class SendApplyToClientHandler implements FileEventHandler{
+public class SendApplyToClientHandler implements FileEventHandler {
     private static Log logger = LogFactory.getLog(SendApplyToClientHandler.class);
 
     private static volatile SendApplyToClientHandler instance;
@@ -57,9 +57,10 @@ public class SendApplyToClientHandler implements FileEventHandler{
             // 正确写入类数据
             client.setLastInteraction(new Date());
         }
-        if(client.getReplyBufferPos() == 0 && client.getReplyQueue().isEmpty()) {
-            client.setSentLen(0);
-            server.distroyClient(key, client);
+
+        // 如果回复缓冲区空了，则不需要在监听write事件
+        if (client.isReplyEmpty()) {
+            server.getEventLoop().unregisterFileEvent(key, SelectionKey.OP_WRITE);
         }
 
         server.clearCurrentClient();

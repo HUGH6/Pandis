@@ -1,26 +1,17 @@
 package server;
 
 import client.PandisClient;
-import event.AcceptTcpHandler;
+import event.handler.AcceptTcpHandler;
 import event.EventLoop;
 import org.apache.commons.logging.LogFactory;
 import server.config.ServerConfig;
 import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.SocketAddress;
-import java.net.SocketOption;
 import java.nio.channels.*;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 /**
  * @description:
@@ -104,11 +95,7 @@ public class PandisServer {
         // 向事件循环中的监听模块注册事件
         // 为 TCP 连接关联连接应答（accept）处理器
         // 用于接受并应答客户端的 connect() 调用（accept）处理器
-        try {
-            this.eventLoop.registerFileEvent(serverSocketChannel, SelectionKey.OP_ACCEPT, AcceptTcpHandler.getHandler(), null);
-        } catch (ClosedChannelException e) {
-            e.printStackTrace();
-        }
+        this.eventLoop.registerFileEvent(serverSocketChannel, SelectionKey.OP_ACCEPT, AcceptTcpHandler.getHandler(), null);
     }
 
     private void initServerConfig() {
@@ -209,8 +196,8 @@ public class PandisServer {
         this.clients.remove(client);
 
         if (client.getSocketChannel() != null) {
-            this.eventLoop.deleteFileEvent(key, SelectionKey.OP_READ);
-            this.eventLoop.deleteFileEvent(key, SelectionKey.OP_WRITE);
+            this.eventLoop.unregisterFileEvent(key, SelectionKey.OP_READ);
+            this.eventLoop.unregisterFileEvent(key, SelectionKey.OP_WRITE);
             client.distroy();
         }
 

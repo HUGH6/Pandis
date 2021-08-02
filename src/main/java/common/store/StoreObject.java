@@ -56,4 +56,9 @@ public class StoreObject {
 
         return false;
     }
+
+    @Override
+    public String toString() {
+        return obj.toString();
+    }
 }
