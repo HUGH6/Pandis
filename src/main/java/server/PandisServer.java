@@ -87,7 +87,7 @@ public class PandisServer {
             serverSocketChannel.socket().bind(new InetSocketAddress(this.serverConfig.getPort()));
             serverSocketChannel.configureBlocking(false);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.fatal("Init the server socket channel error", e);
         }
 
         // 创建并初始化数据库;

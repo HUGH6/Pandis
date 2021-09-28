@@ -18,5 +18,7 @@ public class ServerContext {
         return context;
     }
 
-
+    public PandisDatabase getDatabase() {
+        return serverInstance.getDatabases();
+    }
 }

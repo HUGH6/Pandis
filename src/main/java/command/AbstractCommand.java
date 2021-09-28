@@ -1,5 +1,7 @@
 package command;
 
+import server.ServerContext;
+
 /**
  * @Description Command接口的骨架实现，具体Command实现都应该继承该骨架实现
  * @Author huzihan

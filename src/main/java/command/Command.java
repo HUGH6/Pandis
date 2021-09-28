@@ -1,5 +1,7 @@
 package command;
 
+import client.PandisClient;
+
 /**
  * @Description Pandis命令抽象接口
  * @Author huzihan
@@ -7,5 +9,5 @@ package command;
  */
 @FunctionalInterface
 public interface Command {
-    void execute();
+    void execute(PandisClient client);
 }

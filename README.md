@@ -17,7 +17,9 @@ Pandis是一个模仿Redis实现的分布式缓存系统，基于Java实现。
 * common
   * store
     * 字符串
+      * SDS
     * 列表
+      * ZIPLIST
     * 集合
     * 哈希表
     * 有序列表

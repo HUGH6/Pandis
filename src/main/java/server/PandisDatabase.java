@@ -1,6 +1,6 @@
 package server;
 
-import common.store.StoreObject;
+import common.store.PandisObject;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -11,11 +11,12 @@ import java.util.Map;
  * @create: 2021-07-20
  */
 public class PandisDatabase {
-    private Map<StoreObject, StoreObject> database;
-    private Map<StoreObject, StoreObject> expires;
-    private Map<StoreObject, StoreObject> blockingKeys;
-    private Map<StoreObject, StoreObject> readyKeys;
-    private Map<StoreObject, StoreObject> watchedKeys;
+
+    private Map<PandisObject, PandisObject> database;
+    private Map<PandisObject, PandisObject> expires;
+    private Map<PandisObject, PandisObject> blockingKeys;
+    private Map<PandisObject, PandisObject> readyKeys;
+    private Map<PandisObject, PandisObject> watchedKeys;
 
     private int id;
     private long avgTtl;
@@ -36,8 +37,8 @@ public class PandisDatabase {
      * @param key
      * @return
      */
-    public StoreObject lookupKey(StoreObject key) {
-        StoreObject res = this.database.get(key);
+    public PandisObject lookupKey(PandisObject key) {
+        PandisObject res = this.database.get(key);
 
         if (res != null) {
             // 更新对象的访问lru时间等
@@ -52,9 +53,9 @@ public class PandisDatabase {
      * @param key
      * @param value
      */
-    public void add(StoreObject key, StoreObject value) {
-        StoreObject oldValue = this.database.put(key, value);
-    }
+    public void add(PandisObject key, PandisObject value) {
+                                                        PandisObject oldValue = this.database.put(key, value);
+                                                                                                              }
 
     /**
      * 高层次的 SET 操作函数。
@@ -64,7 +65,7 @@ public class PandisDatabase {
      * @param key
      * @param value
      */
-    public void setKey(StoreObject key, StoreObject value) {
+    public void setKey(PandisObject key, PandisObject value) {
         add(key, value);
 
         // 移除键的过期时间
@@ -77,9 +78,9 @@ public class PandisDatabase {
      * @param key
      * @return
      */
-    public boolean exists(StoreObject key) {
-        return this.database.containsKey(key);
-    }
+    public boolean exists(PandisObject key) {
+                                          return this.database.containsKey(key);
+                                                                                }
 
     /**
      * 从数据库中删除给定的键，键的值，以及键的过期时间。
@@ -87,8 +88,8 @@ public class PandisDatabase {
      * @param key
      * @return
      */
-    public int delete(StoreObject key) {
-        StoreObject oldVal = this.database.remove(key);
+    public int delete(PandisObject key) {
+        PandisObject oldVal = this.database.remove(key);
 
         if (oldVal == null) {
             return 0;
@@ -103,5 +104,9 @@ public class PandisDatabase {
      */
     public void clear() {
         this.database.clear();
+    }
+
+    public void setExpire(PandisObject key, long l) {
+
     }
 }

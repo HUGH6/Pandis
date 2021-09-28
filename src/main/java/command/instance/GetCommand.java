@@ -1,5 +1,6 @@
 package command.instance;
 
+import client.PandisClient;
 import command.AbstractCommand;
 import server.PandisServer;
 
@@ -18,7 +19,7 @@ public class GetCommand extends AbstractCommand {
     }
 
     @Override
-    public void execute() {
+    public void execute(PandisClient client) {
         System.out.println("get 命令模拟");
     }
 }

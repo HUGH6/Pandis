@@ -122,7 +122,6 @@ public class ClientContext {
                     this.socketBuffer.flip();
 
                     writeNum = this.socketChannel.write(this.socketBuffer);
-
                     while (this.socketBuffer.hasRemaining()) {
                         writeNum = this.socketChannel.write(this.socketBuffer);
                     }

@@ -1,22 +1,23 @@
 package common.store;
 
+import javax.naming.OperationNotSupportedException;
+
 /**
  * @description: 缓存系统中所有对象都用StoreObject表示，不管是key还是value
  *
  * @author: huzihan
  * @create: 2021-06-27
  */
-public class StoreObject {
+public class PandisObject {
     private ObjectType type; // 对象类型，5种类型之一
-    private Object obj;     // 实际对象
+    private Object obj;      // 实际对象
     private long lastVisitTime; // 最近一次访问时间
 
-    public StoreObject(ObjectType type, Object obj) {
+    public PandisObject(ObjectType type, Object obj) {
         this.type = type;
         this.obj = obj;
         this.lastVisitTime = System.currentTimeMillis();
     }
-
 
     /**
      * 更新对象的最近一次被访问时间
@@ -49,8 +50,8 @@ public class StoreObject {
             return false;
         }
 
-        if (other instanceof StoreObject) {
-            StoreObject o = (StoreObject) other;
+        if (other instanceof PandisObject) {
+            PandisObject o = (PandisObject) other;
             return o.type == this.type && this.obj.equals(o.obj) && this.lastVisitTime == o.lastVisitTime;
         }
 
@@ -60,5 +61,15 @@ public class StoreObject {
     @Override
     public String toString() {
         return obj.toString();
+    }
+
+    public Long getLong() throws OperationNotSupportedException {
+        // 确保对象为STRING类型
+        if (type == ObjectType.STRING) {
+            // todo
+            return 0L;
+        } else {
+            throw new OperationNotSupportedException();
+        }
     }
 }

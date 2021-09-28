@@ -3,12 +3,10 @@ package protocol;
 import client.PandisClient;
 import common.store.ObjectType;
 import common.store.Sds;
-import common.store.StoreObject;
+import common.store.PandisObject;
 import utils.SdsUtil;
 
-import javax.xml.bind.SchemaOutputResolver;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Arrays;
 
 
@@ -66,11 +64,11 @@ public class RequestParser {
         // 从缓冲区中删除已从 argv 已读取的内容，剩余内容时未读取的
         client.getQueryBuffer().cut(queryLen + 2, queryBuffer.getLen());
 
-        StoreObject[] so = new StoreObject[argv.length];
+        PandisObject[] so = new PandisObject[argv.length];
         // 为每个参数创建一个字符串对象
         for(int i = 0; i < argv.length; i++){
             if(argv[i].getLen() > 0){
-                so[i] = new StoreObject(ObjectType.STRING, argv[i]);
+                so[i] = new PandisObject(ObjectType.STRING, argv[i]);
             }
         }
 
@@ -195,10 +193,10 @@ public class RequestParser {
                 if (pos == 0 && client.getBulkLen() >= MBULK_BIG_ARG && queryBuffer.getLen() == client.getBulkLen() + 2){
                     // todo
                 } else {
-                    StoreObject[] storeObject = new StoreObject[client.getArgv().length+1];
-                    System.arraycopy(client.getArgv(), 0, storeObject, 0, client.getArgv().length);
-                    storeObject[storeObject.length-1] = new StoreObject(ObjectType.STRING, Sds.createSds(new String(queryBuffer.getBuf(), pos, client.getBulkLen()).getBytes(StandardCharsets.UTF_8)));
-                    client.setArgv(storeObject);
+                    PandisObject[] pandisObject = new PandisObject[client.getArgv().length+1];
+                    System.arraycopy(client.getArgv(), 0, pandisObject, 0, client.getArgv().length);
+                    pandisObject[pandisObject.length-1] = new PandisObject(ObjectType.STRING, Sds.createSds(new String(queryBuffer.getBuf(), pos, client.getBulkLen()).getBytes(StandardCharsets.UTF_8)));
+                    client.setArgv(pandisObject);
                     pos += client.getBulkLen() + 2;
                 }
                 client.setBulkLen(-1);

@@ -2,7 +2,7 @@ package protocol;
 
 import client.PandisClient;
 import common.store.Sds;
-import common.store.StoreObject;
+import common.store.PandisObject;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -33,7 +33,7 @@ public class TestRequestParser {
         client.setQueryBuffer(sds);
 
 //        RequestProcessor.processMultiBulkRequestTest(client);
-        final StoreObject[] argv = client.getArgv();
+        final PandisObject[] argv = client.getArgv();
         for(int i = 0; i < argv.length; i++){
             System.out.println(argv[i].getObj().toString());
         }

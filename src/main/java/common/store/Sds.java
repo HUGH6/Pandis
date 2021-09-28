@@ -8,7 +8,7 @@ import java.util.Arrays;
  * 动态字符串
  * 线程不安全
  */
-public class Sds implements Comparable<Sds> {
+public class Sds implements Comparable<Sds>, PandisString {
     private int len;    // 表示字符串长度
     private int free;   // 记录buf数组中未使用的字节长度
 
