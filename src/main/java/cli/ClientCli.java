@@ -1,6 +1,10 @@
 package cli;
 
-import protocol.Reply;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import remote.Reply;
+import remote.Response;
+import server.PandisServer;
 import utils.StringUtil;
 
 import java.util.Arrays;
@@ -13,6 +17,8 @@ import java.util.Scanner;
  * @Date 2021/7/24
  **/
 public class ClientCli {
+    private static Log logger = LogFactory.getLog(ClientCli.class);
+
     private ClientConfig config;    // 客户端配置
     private ClientContext context;  // 客户端运行上下文
 
@@ -225,10 +231,10 @@ public class ClientCli {
         boolean output = true;
         StringBuilder out = new StringBuilder();
 
-        Reply reply = this.context.getReply();
+        Response response = this.context.getResponse();
 
         // 如果获取回复失败
-        if (reply == null) {
+        if (response == null) {
             if (this.config.isShutdown()) {
                 return true;
             }
@@ -244,16 +250,16 @@ public class ClientCli {
         if (output) {
             // 以raw字符串格式输出
             if (outputRawString) {
-                out.append(formatReplyRaw(reply));
+                out.append(formatResponseRaw(response));
             } else {
                 // 判断以什么格式输出回复结果
                 if (this.config.getOutputType() == ClientConfig.OutputType.OUTPUT_RAW) {
-                    out.append(formatReplyRaw(reply));
+                    out.append(formatResponseRaw(response));
                     out.append("\n");
                 } else if (this.config.getOutputType() == ClientConfig.OutputType.OUTPUT_STANDARD) {
-                    out.append(formatReplyTTY(reply));
+                    out.append(formatResponseTTY(response));
                 } else if (this.config.getOutputType() == ClientConfig.OutputType.OUTPUT_CSV) {
-                    out.append(formatReplyCSV(reply));
+                    out.append(formatResponseCSV(response));
                     out.append("\n");
                 }
             }
@@ -262,23 +268,23 @@ public class ClientCli {
         return true;
     }
 
-    private String formatReplyRaw(Reply reply) {
+    private String formatResponseRaw(Response response) {
         StringBuilder out = new StringBuilder();
 
-        switch (reply.getType()) {
+        switch (response.getType()) {
             case ERROR:
-                out.append(reply.getStringReplyContent());
+                out.append(response.getContent());
                 out.append("\n");
                 break;
             case STATUS:
             case BULK:
-                out.append(reply.getStringReplyContent());
+                out.append(response.getContent());
                 break;
             case INTEGER:
-                out.append(String.valueOf(reply.getIntegerReplyContent()));
+                out.append(String.valueOf(response.getContent()));
                 break;
             case MULTI_BULK:
-                List<String> contents = reply.getMultiStringReplyContent();
+                List<String> contents = (List<String>)response.getContent();
                 int len = contents.size();
                 for (int i = 0; i < len; i++) {
                     if (i > 0) {
@@ -294,21 +300,21 @@ public class ClientCli {
         return out.toString();
     }
 
-    private String formatReplyTTY(Reply reply) {
+    private String formatResponseTTY(Response response) {
         StringBuilder out = new StringBuilder();
 
-        switch (reply.getType()) {
+        switch (response.getType()) {
             case ERROR:
                 out.append("(error) ");
-                out.append(reply.getStringReplyContent());
+                out.append(response.getContent());
                 out.append("\n");
                 break;
             case STATUS:
-                out.append(reply.getStringReplyContent());
+                out.append(response.getContent());
                 out.append("\n");
                 break;
             case BULK:
-                out.append(StringUtil.toQuoted(reply.getStringReplyContent()));
+                out.append(StringUtil.toQuoted((String)response.getContent()));
                 out.append("\n");
                 break;
             case NIL:
@@ -316,11 +322,11 @@ public class ClientCli {
                 break;
             case INTEGER:
                 out.append("(integer) ");
-                out.append(String.valueOf(reply.getIntegerReplyContent()));
+                out.append(String.valueOf(response.getContent()));
                 out.append("\n");
                 break;
             case MULTI_BULK:
-                List<String> contents = reply.getMultiStringReplyContent();
+                List<String> contents = (List<String>)response.getContent();
                 int len = contents.size();
 
                 if (len == 0) {
@@ -341,31 +347,31 @@ public class ClientCli {
         return out.toString();
     }
 
-    private String formatReplyCSV(Reply reply) {
+    private String formatResponseCSV(Response response) {
         StringBuilder out = new StringBuilder();
 
-        switch (reply.getType()) {
+        switch (response.getType()) {
             case ERROR:
                 out.append("ERROR, ");
                 out.append("\"");
-                out.append(reply.getStringReplyContent());
+                out.append(response.getContent());
                 out.append("\"");
                 break;
             case STATUS:
                 out.append("\"");
-                out.append(reply.getStringReplyContent());
+                out.append(response.getContent());
                 out.append("\"");
                 break;
             case BULK:
                 out.append("\"");
-                out.append(reply.getStringReplyContent());
+                out.append(response.getContent());
                 out.append("\"");
                 break;
             case INTEGER:
-                out.append(String.valueOf(reply.getIntegerReplyContent()));
+                out.append(String.valueOf(response.getContent()));
                 break;
             case MULTI_BULK:
-                List<String> contents = reply.getMultiStringReplyContent();
+                List<String> contents = (List<String>)response.getContent();
                 int len = contents.size();
                 for (int i = 0; i < len; i++) {
                     out.append("\"");
@@ -399,6 +405,9 @@ public class ClientCli {
         String [] argv = null;
 
         while ((line = scanner.nextLine())!= null) {
+            // 测试：输出cli输入的数据
+            logger.debug("cli输入的内容：" + line);
+
             line = line.trim();
             if (line.length() > 0) {
                 // 分割参数，注意:可以允许“a b c”这种用引号括起来的表示一个整体的形式，这种应该作为一个整体
@@ -468,6 +477,8 @@ public class ClientCli {
      * @param args
      */
     public static void main(String [] args) {
+        logger.info("pandis cli start...");
+
         // 初始化CLI及其默认配置
         ClientCli cli = new ClientCli();
         // 解析输入参数

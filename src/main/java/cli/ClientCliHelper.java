@@ -39,7 +39,7 @@ public class ClientCliHelper {
         usage.append("                     Default time interval is 15 sec. Change it using -i.\n");
         usage.append("  --slave            Simulate a slave showing commands received from the master.\n");
         usage.append("  --rdb <filename>   Transfer an RDB dump from remote server to local file.\n");
-        usage.append("  --pipe             Transfer raw Redis protocol from stdin to server.\n");
+        usage.append("  --pipe             Transfer raw Redis remote.protocol from stdin to server.\n");
         usage.append("  --pipe-timeout <n> In --pipe mode, abort with error if after sending all data.\n");
         usage.append("                     no reply is received within <n> seconds.\n");
         usage.append("                     Default timeout: %d. Use 0 to wait forever.\n");

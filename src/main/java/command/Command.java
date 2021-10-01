@@ -1,6 +1,6 @@
 package command;
 
-import client.PandisClient;
+import client.InnerClient;
 
 /**
  * @Description Pandis命令抽象接口
@@ -9,5 +9,5 @@ import client.PandisClient;
  */
 @FunctionalInterface
 public interface Command {
-    void execute(PandisClient client);
+    void execute(InnerClient client);
 }

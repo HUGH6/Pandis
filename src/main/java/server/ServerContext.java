@@ -9,7 +9,7 @@ import server.config.ServerConfig;
  * @create: 2021-07-30
  */
 public class ServerContext {
-    private volatile static ServerContext context;
+    private volatile static ServerContext context = new ServerContext();
     private volatile PandisServer serverInstance;
     private volatile ServerConfig serverConfig;
     private volatile EventLoop eventLoop;
@@ -18,7 +18,23 @@ public class ServerContext {
         return context;
     }
 
-    public PandisDatabase getDatabase() {
+    public Database [] getDatabases() {
         return serverInstance.getDatabases();
+    }
+
+    public EventLoop getEventLoop() {
+        return this.eventLoop;
+    }
+
+    public void setServerInstance(PandisServer serverInstance) {
+        this.serverInstance = serverInstance;
+    }
+
+    public void setServerConfig(ServerConfig serverConfig) {
+        this.serverConfig = serverConfig;
+    }
+
+    public void setEventLoop(EventLoop eventLoop) {
+        this.eventLoop = eventLoop;
     }
 }

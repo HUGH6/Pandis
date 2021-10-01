@@ -2,8 +2,7 @@ package common.struct.impl;
 
 import common.struct.ObjectType;
 import common.struct.PandisString;
-import protocol.Protocol;
-import utils.ByteUtil;
+import remote.protocol.Protocol;
 import utils.SafeEncoder;
 
 import java.util.Arrays;
@@ -97,6 +96,16 @@ public class Sds implements PandisString, Comparable<Sds> {
     }
 
     /**
+     * 根据给定String创建Sds
+     * @param str
+     * @return
+     */
+    public static Sds createSds(String str) {
+        byte [] bytes = SafeEncoder.encode(str);
+        return createSds(bytes);
+    }
+
+    /**
      * 创建并返回一个空 sds
      * @return  相对应的 sds
      */
@@ -163,10 +172,14 @@ public class Sds implements PandisString, Comparable<Sds> {
         return -1;
     }
 
+    /**
+     * 这里做了特殊处理：由于char实际占2个字节，但为了方便，我们以1个字节处理，放弃了一个字节
+     * @param c
+     */
     @Override
     public void append(char c) {
-        byte [] bytes = ByteUtil.charToBytes(c);
-        append(bytes);
+        byte b = (byte)c;
+        append(b);
     }
 
     @Override
@@ -222,6 +235,18 @@ public class Sds implements PandisString, Comparable<Sds> {
         int newLen = end - start;
         System.arraycopy(this.buf, start, this.buf, 0, newLen);
         setLen(newLen);
+    }
+
+    /**
+     * 重新调整Sds的大小
+     * @param len
+     * @param free
+     */
+    public void resize(int len, int free) {
+        byte [] newbuf = new byte[len + free];
+        System.arraycopy(this.buf, 0, newbuf, 0, len);
+        this.buf = newbuf;
+        setLen(len);
     }
 
     /**
@@ -345,6 +370,10 @@ public class Sds implements PandisString, Comparable<Sds> {
 
     public byte[] toArray() {
         return Arrays.copyOf(this.buf, this.buf.length);
+    }
+
+    public byte[] toArrayWithOutCopy() {
+        return this.buf;
     }
 
     @Override

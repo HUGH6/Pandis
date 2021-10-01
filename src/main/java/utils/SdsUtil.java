@@ -1,6 +1,6 @@
 package utils;
 
-import common.store.Sds;
+import common.struct.impl.Sds;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +27,7 @@ public class SdsUtil {
      * @return 函数返回一个 sds 数组
      */
     public static Sds[] splitArgs(Sds line){
-        byte[] content = line.getBufNoCopy();
+        byte[] content = line.toArrayWithOutCopy();
         List<Sds> list = new ArrayList<>();
 
         Sds current = null;
@@ -47,7 +47,7 @@ public class SdsUtil {
                 boolean done = false;
 
                 if (current == null) {
-                    current = Sds.newEmptySds();
+                    current = Sds.createEmptySds();
                 }
 
                 while(!done) {
@@ -59,7 +59,7 @@ public class SdsUtil {
                             && StringUtil.isHexDigit((char)content[index + 3])) {
                             // 解析引号中的16进制表示的数据
                             int val = StringUtil.hexDigitToInt((char)content[index + 2]) * 16 + StringUtil.hexDigitToInt((char)content[index + 3]);
-                            current.cat(SafeEncoder.encode(String.valueOf(val)));
+                            current.append(SafeEncoder.encode(String.valueOf(val)));
                             index += 3;
                         } else if (index + 1 < length && (char)content[index] == '\\') {
                             // 将引号中的文本表示的转义字符转换为实际的转义字符

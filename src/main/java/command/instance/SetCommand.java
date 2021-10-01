@@ -1,10 +1,6 @@
 package command.instance;
 
-import client.PandisClient;
-import command.AbstractCommand;
-import common.store.PandisObject;
-
-import java.util.concurrent.TimeUnit;
+import client.InnerClient;
 
 /**
  * set命令
@@ -19,7 +15,7 @@ public class SetCommand extends GenericSetCommand {
     }
 
     @Override
-    public void execute(PandisClient client) {
+    public void execute(InnerClient client) {
         // 解析参数，记录标记
 
         // 尝试对对象进行编码

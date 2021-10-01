@@ -1,6 +1,6 @@
 package utils;
 
-import protocol.Protocol;
+import remote.protocol.Protocol;
 
 /**
  * @Description 用于将java中String数据编码为服务端协议可以识别的byte数组，该实现受jedis启发

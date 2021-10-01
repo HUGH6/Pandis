@@ -1,6 +1,6 @@
 package event.handler;
 
-import client.PandisClient;
+import client.InnerClient;
 import event.FileEventHandler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -45,21 +45,21 @@ public class SendApplyToClientHandler implements FileEventHandler {
      */
     @Override
     public boolean handle(PandisServer server, SelectionKey key, Object privateData) {
-        PandisClient client = (PandisClient) privateData;
+        InnerClient client = (InnerClient) privateData;
 
         // 设置服务器的当前客户端
         server.setCurrentClient(client);
 
         // 读入内容到查询缓冲区
-        int writeNum = client.writeSocketData();
+        int writeNum = client.writeData();
 
         if(writeNum > 0) {
             // 正确写入类数据
-            client.setLastInteraction(new Date());
+            client.updateLastInteraction();
         }
 
         // 如果回复缓冲区空了，则不需要在监听write事件
-        if (client.isReplyEmpty()) {
+        if (client.isNothingToReply()) {
             server.getEventLoop().unregisterFileEvent(key, SelectionKey.OP_WRITE);
         }
 

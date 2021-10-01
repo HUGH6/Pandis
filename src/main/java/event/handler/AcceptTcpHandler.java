@@ -1,13 +1,12 @@
 package event.handler;
 
-import client.PandisClient;
+import client.InnerClient;
 import event.FileEventHandler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import server.PandisServer;
 
 import java.io.IOException;
-import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
@@ -67,9 +66,8 @@ public class AcceptTcpHandler implements FileEventHandler {
             e.printStackTrace();
         }
 
-        // 待实现
         // 创建client
-        PandisClient newClient = PandisClient.createClient(socketChannel);
+        InnerClient newClient = (InnerClient) InnerClient.createClient(socketChannel);
         server.addClient(newClient);
 
         logger.info("Accepted client connection from " + socketChannel.socket().getRemoteSocketAddress());

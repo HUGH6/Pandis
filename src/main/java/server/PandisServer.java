@@ -1,6 +1,8 @@
 package server;
 
-import client.PandisClient;
+import cli.ClientCli;
+import client.InnerClient;
+import com.sun.security.ntlm.Server;
 import event.handler.AcceptTcpHandler;
 import event.EventLoop;
 import org.apache.commons.logging.LogFactory;
@@ -20,25 +22,32 @@ import java.util.List;
  */
 public class PandisServer {
 
+    private static Log logger = LogFactory.getLog(PandisServer.class);
+
+    private ServerContext context = ServerContext.getContext();
+
     private ServerConfig serverConfig;  // 服务端配置
     private EventLoop eventLoop;        // 事件循环
-    private List<PandisClient> clients; // 保存了所有连接到服务器的客户端结构
+    private List<InnerClient> clients; // 保存了所有连接到服务器的客户端结构
     private static volatile PandisServer serverInstance; // 服务器实例
 
-    private volatile PandisClient currentClient;    // 当前客户端，仅用于奔溃报告
+    private volatile InnerClient currentClient;    // 当前客户端，仅用于奔溃报告
 
-    private Log logger = LogFactory.getLog(PandisServer.class);
 
-    private PandisDatabase [] databases;
+    private Database[] databases;
 
     public PandisServer() {
         super();
     }
 
     public static void main(String[] args) {
+        logger.info("pandis server start...\r\n");
+
         PandisServer server = new PandisServer();
 
         PandisServer.serverInstance = server;
+
+        ServerContext.getContext().setServerInstance(server);
 
         // 初始化服务器默认配置
         server.initServerConfig();
@@ -71,13 +80,15 @@ public class PandisServer {
         // 创建事件循环对象
         this.eventLoop = EventLoop.createEventLoop();
 
+        ServerContext.getContext().setEventLoop(this.eventLoop);
+
         // 创建保存客户端结构的链表
         this.clients = new LinkedList<>();
 
         // 创建数据库
-        this.databases = new PandisDatabase[this.serverConfig.getDbNumber()];
+        this.databases = new Database[this.serverConfig.getDbNumber()];
         for (int i = 0; i < this.serverConfig.getDbNumber(); i++) {
-            this.databases[i] = new PandisDatabase(i);
+            this.databases[i] = new Database(i);
         }
 
         // 打开TCP监听端口
@@ -100,6 +111,7 @@ public class PandisServer {
 
     private void initServerConfig() {
         this.serverConfig = ServerConfig.build();
+        ServerContext.getContext().setServerConfig(this.serverConfig);
     }
 
     private void loadServerConfigFromFile(String filePath) {
@@ -168,7 +180,7 @@ public class PandisServer {
         return this.eventLoop;
     }
 
-    public void addClient(PandisClient client) {
+    public void addClient(InnerClient client) {
         this.clients.add(client);
     }
 
@@ -176,7 +188,7 @@ public class PandisServer {
         return serverInstance;
     }
 
-    public synchronized void setCurrentClient(PandisClient client) {
+    public synchronized void setCurrentClient(InnerClient client) {
         this.currentClient = client;
     }
 
@@ -188,7 +200,7 @@ public class PandisServer {
      * 销毁连接的客户端
      * @param client
      */
-    public void distroyClient(SelectionKey key, PandisClient client) {
+    public void distroyClient(SelectionKey key, InnerClient client) {
         if (this.currentClient.equals(client)) {
             this.clearCurrentClient();
         }
@@ -208,7 +220,7 @@ public class PandisServer {
         return this.serverConfig;
     }
 
-    public PandisDatabase[] getDatabases() {
+    public Database[] getDatabases() {
         return this.databases;
     }
 

@@ -1,6 +1,6 @@
 package event.handler;
 
-import client.PandisClient;
+import client.InnerClient;
 import event.FileEventHandler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -43,27 +43,24 @@ public class ReadQueryFromClientHandler implements FileEventHandler {
      */
     @Override
     public boolean handle(PandisServer server, SelectionKey key, Object privateData) {
-        PandisClient client = (PandisClient) privateData;
+        InnerClient client = (InnerClient) privateData;
 
         // 设置服务器的当前客户端
         server.setCurrentClient(client);
 
         // 读入内容到查询缓冲区
-        int readNum = client.readSocketData();
+        int readNum = client.readData();
 
         // 根据读取情况处理
         if (readNum > 0) {
             // 正常读取了数据，开始处理数据
-            client.processInputBuffer();
+            client.processInputData();
         } else if (readNum == -1) {
             // 客户端断开连接，需要关闭SocketChannel
             server.distroyClient(key, client);
         } else if (readNum == 0) {
             logger.error("客户端数据读取异常");
         }
-
-        // test
-        client.addReply(":2\r\n");
 
         server.clearCurrentClient();
         return true;

@@ -1,12 +1,13 @@
 package cli;
 
 import common.ErrorType;
-import common.store.Sds;
+import common.struct.impl.Sds;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import protocol.Protocol;
-import protocol.Reply;
-import protocol.ReplyParser;
+import remote.Response;
+import remote.protocol.Protocol;
+import remote.protocol.ResponseParser;
+import remote.Reply;
 import utils.SafeEncoder;
 
 import java.io.IOException;
@@ -28,8 +29,8 @@ public class ClientContext {
     private ByteBuffer socketBuffer;    // 用于辅助socketChannel读写网络数据
     private int flags;
     private StringBuilder outBuffer;    // 要发送的命令都存储在这里
-    private Sds replyBuffer;            // 回复缓冲区
-    private int replyBufferParsePos;    // 表示回复缓冲区中当前解析到的位置
+    private Sds responseBuffer;            // 回复缓冲区
+    private int responseBufferParsePos;    // 表示回复缓冲区中当前解析到的位置
 
     public ClientContext() {
         this.err = null;
@@ -38,8 +39,8 @@ public class ClientContext {
         this.socketBuffer = ByteBuffer.allocate(1024 * 16);
         this.flags = 0;
         this.outBuffer = new StringBuilder();
-        this.replyBuffer = Sds.newEmptySds();
-        this.replyBufferParsePos = 0;
+        this.responseBuffer = Sds.createEmptySds();
+        this.responseBufferParsePos = 0;
     }
 
     public void connectTcp(String ip, int port) {
@@ -161,7 +162,7 @@ public class ClientContext {
                 // 将读取到的内容存入缓冲区
                 this.socketBuffer.flip();
                 while (this.socketBuffer.hasRemaining()) {
-                    this.replyBuffer.append(this.socketBuffer.get());
+                    this.responseBuffer.append(this.socketBuffer.get());
                 }
                 // 统计总共读取字节长度
                 readSum += readNum;
@@ -190,54 +191,54 @@ public class ClientContext {
         return readSum > 0 ?true : false;
     }
 
-    public Reply parseItem() {
-        char prefix = this.replyBuffer.charAt(0);
-        byte [] buf = this.replyBuffer.getBuf();
-        Reply reply = null;
+    public Response parseItem() {
+        char prefix = this.responseBuffer.charAt(0);
+        byte [] buf = this.responseBuffer.toArray();
+        Response response = null;
         switch (prefix) {
             case '-':
-                reply = ReplyParser.parseErrorReply(buf, this.replyBufferParsePos);
+                response = ResponseParser.parseErrorResponse(buf, this.responseBufferParsePos);
                 break;
             case '+':
-                reply = ReplyParser.parseStatusReply(buf, this.replyBufferParsePos);
+                response = ResponseParser.parseStatusResponse(buf, this.responseBufferParsePos);
                 break;
             case ':':
-                reply = ReplyParser.parseIntegerReply(buf, this.replyBufferParsePos);
+                response = ResponseParser.parseIntegerResponse(buf, this.responseBufferParsePos);
                 break;
             case '$':
-                reply = ReplyParser.parseBulkReply(buf, this.replyBufferParsePos);
+                response = ResponseParser.parseBulkResponse(buf, this.responseBufferParsePos);
                 break;
             case '*':
-                reply = ReplyParser.parseMultiBulkReply(buf, this.replyBufferParsePos);
+                response = ResponseParser.parseMultiBulkResponse(buf, this.responseBufferParsePos);
                 break;
             default:
                 // 异常情况
         }
 
         // 调整缓冲区大小
-        this.replyBufferParsePos += reply.getParseByteLength();
+        this.responseBufferParsePos += response.byteSize();
 
-        if (this.replyBufferParsePos == this.replyBuffer.getLen()) {
-            this.replyBufferParsePos = 0;
-            this.replyBuffer.resize(0,1024 * 16);
+        if (this.responseBufferParsePos == this.responseBuffer.length()) {
+            this.responseBufferParsePos = 0;
+            this.responseBuffer.resize(0,1024 * 16);
         }
 
-        return reply;
+        return response;
     }
 
 
-    public Reply getReplyFromBuffer() {
-        if (this.replyBuffer.getLen() > 0 && this.replyBufferParsePos != this.replyBuffer.getLen()) {
+    public Response getResponseFromBuffer() {
+        if (this.responseBuffer.length() > 0 && this.responseBufferParsePos != this.responseBuffer.length()) {
             return parseItem();
         } else {
             return null;
         }
     }
 
-    public Reply getReply() {
-        Reply reply = getReplyFromBuffer();
-        if (reply != null) {
-            return reply;
+    public Response getResponse() {
+        Response response = getResponseFromBuffer();
+        if (response != null) {
+            return response;
         } else {
             // 先向服务器发送命令
             if (write()) {
@@ -245,10 +246,10 @@ public class ClientContext {
                 // 必须要读到信息才返回，不然会一直在这里尝试读取
                 while (!read()) {
                 }
-                reply = getReplyFromBuffer();
+                response = getResponseFromBuffer();
             }
 
-            return reply;
+            return response;
         }
     }
 }

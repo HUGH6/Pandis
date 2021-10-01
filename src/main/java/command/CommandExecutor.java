@@ -1,6 +1,6 @@
 package command;
 
-import client.PandisClient;
+import client.InnerClient;
 import command.instance.GetCommand;
 import server.PandisServer;
 
@@ -38,7 +38,7 @@ public class CommandExecutor {
      * 核心方法执行命令
      * @param command 命令实现
      */
-    public static void execute(Command command, PandisClient client) {
+    public static void execute(Command command, InnerClient client) {
         command.execute(client);
     }
 }

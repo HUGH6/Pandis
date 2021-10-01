@@ -1,6 +1,6 @@
 package utils;
 
-import common.store.Sds;
+import deprecated.Sds;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -21,19 +21,19 @@ public class TestSdsUtil {
         Sds test5 = Sds.createSds(SafeEncoder.encode("set a 'ss ss"));
 
 
-        Sds [] res1 = SdsUtil.splitArgs(test1);
-        System.out.println(Arrays.toString(res1));
-
-        Sds [] res2 = SdsUtil.splitArgs(test2);
-        System.out.println(Arrays.toString(res2));
-
-        Sds [] res3 = SdsUtil.splitArgs(test3);
-        System.out.println(Arrays.toString(res3));
-
-        Sds [] res4 = SdsUtil.splitArgs(test4);
-        System.out.println(Arrays.toString(res4));
-
-        Sds [] res5 = SdsUtil.splitArgs(test5);
-        System.out.println(Arrays.toString(res5));
+//        Sds [] res1 = SdsUtil.splitArgs(test1);
+//        System.out.println(Arrays.toString(res1));
+//
+//        Sds [] res2 = SdsUtil.splitArgs(test2);
+//        System.out.println(Arrays.toString(res2));
+//
+//        Sds [] res3 = SdsUtil.splitArgs(test3);
+//        System.out.println(Arrays.toString(res3));
+//
+//        Sds [] res4 = SdsUtil.splitArgs(test4);
+//        System.out.println(Arrays.toString(res4));
+//
+//        Sds [] res5 = SdsUtil.splitArgs(test5);
+//        System.out.println(Arrays.toString(res5));
     }
 }

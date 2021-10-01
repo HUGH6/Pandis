@@ -1,6 +1,6 @@
 package command.instance;
 
-import client.PandisClient;
+import client.InnerClient;
 import command.AbstractCommand;
 
 /**
@@ -13,7 +13,7 @@ public class AuthCommand extends AbstractCommand {
         super("auth", 2, false, "rslt");
     }
     @Override
-    public void execute(PandisClient client) {
+    public void execute(InnerClient client) {
         System.out.println("auth 测试");
     }
 }
