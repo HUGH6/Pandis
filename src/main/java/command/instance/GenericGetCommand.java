@@ -6,9 +6,8 @@ import common.struct.ObjectType;
 import common.struct.PandisObject;
 import common.struct.PandisString;
 import common.struct.impl.Sds;
-import error.ErrorConstants;
+import constants.ErrorConstants;
 import server.Database;
-import shared.SharedObjects;
 
 /**
  * @description:

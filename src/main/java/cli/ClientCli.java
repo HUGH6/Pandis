@@ -400,9 +400,13 @@ public class ClientCli {
      * 用户可以输入repl格式的文本内容发送给服务器
      */
     private void runReplMode() {
+
         Scanner scanner = new Scanner(System.in);
         String line = null;
         String [] argv = null;
+
+        // 等待用户输入
+        System.out.println("please input command：");
 
         while ((line = scanner.nextLine())!= null) {
             // 测试：输出cli输入的数据

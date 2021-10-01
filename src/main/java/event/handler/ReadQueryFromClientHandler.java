@@ -55,6 +55,9 @@ public class ReadQueryFromClientHandler implements FileEventHandler {
         if (readNum > 0) {
             // 正常读取了数据，开始处理数据
             client.processInputData();
+
+            // 测试：从命令中网络输入中传输出来的命令
+            logger.debug("服务端解析出来的命令参数列表: " + client.getCommandArgs().toString());
         } else if (readNum == -1) {
             // 客户端断开连接，需要关闭SocketChannel
             server.distroyClient(key, client);

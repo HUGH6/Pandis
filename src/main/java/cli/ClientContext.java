@@ -94,6 +94,9 @@ public class ClientContext {
      * @return
      */
     private boolean appendCommand(String cmd) {
+        // 测试：输出容标准输入中解析出来的命令
+        logger.debug("cli发送的命令: " + cmd);
+
         this.outBuffer.append(cmd);
         return true;
     }

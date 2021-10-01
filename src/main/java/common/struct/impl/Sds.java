@@ -209,7 +209,7 @@ public class Sds implements PandisString, Comparable<Sds> {
         this.expand(length);
 
         // 填充数据
-        System.arraycopy(this.buf, this.len, bytes, 0, length);
+        System.arraycopy(bytes, 0, this.buf, this.len, length);
 
         // 更新Sds长度属性
         increaseLength(length);
@@ -222,13 +222,19 @@ public class Sds implements PandisString, Comparable<Sds> {
      */
     @Override
     public void cut(int start, int end) {
-        if (start < 0 || start >= end || end > this.len) {
+        if (start < 0 || start > end || end > this.len) {
             throw new IllegalArgumentException("The 'start' or 'end' argument is illegal");
         }
 
         // 特殊情况优化：如果start为0，那么就只需要修改len属性，而无需复制数据
         if (start == 0) {
             setLen(end);
+            return;
+        }
+
+        // 特殊情况优化：如果start大于sds实际长度，那么直接将sds清空
+        if (start >= this.len) {
+            setLen(0);
             return;
         }
 

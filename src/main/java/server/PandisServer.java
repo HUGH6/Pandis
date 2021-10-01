@@ -3,6 +3,7 @@ package server;
 import cli.ClientCli;
 import client.InnerClient;
 import com.sun.security.ntlm.Server;
+import common.struct.impl.Sds;
 import event.handler.AcceptTcpHandler;
 import event.EventLoop;
 import org.apache.commons.logging.LogFactory;
@@ -41,7 +42,7 @@ public class PandisServer {
     }
 
     public static void main(String[] args) {
-        logger.info("pandis server start...\r\n");
+        logger.info("pandis server start...");
 
         PandisServer server = new PandisServer();
 

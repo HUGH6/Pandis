@@ -96,6 +96,8 @@ public class InnerClient implements Client {
      */
     public void processInputData() {
         this.receiver.processRequest();
+        // 处理传入的命令
+        processCommandArgs();
     }
 
     /**
@@ -124,13 +126,13 @@ public class InnerClient implements Client {
         // (2)根据命令名称获得的命令实现，可以获得该命令arity属性，
         // 检查命令请求所给定的参数个数是否正确，当参数个数不正确时，不再执行后续步骤，直接向客户端返回一个错误。
         String commandName = this.commandArgs.get(0).toString();
-        AbstractCommand command = CommandExecutor.lookupCommand(commandName);
+        AbstractCommand command = CommandExecutor.getExecutor().lookupCommand(commandName);
 
         if (command == null) {
             // 没找到命令
             // 回复错误信息
             return;
-        } else if ((!command.isGreaterThanArity() && command.getArity() != this.commandArgs.size() - 1) || this.commandArgs.size() - 1 < command.getArity()) {
+        } else if ((!command.isGreaterThanArity() && command.getArity() != this.commandArgs.size()) || this.commandArgs.size() < command.getArity()) {
             // 参数个数错误
             // 回复错误信息
             return;
@@ -177,10 +179,10 @@ public class InnerClient implements Client {
         // [暂时不实现] 判断是否是事务模式，如果是就将命令加入队列中
         // 否则直接执行
 
+        CommandExecutor.getExecutor().execute(command, this);
+
         // 清除该客户端当前缓存的命令参数
         this.commandArgs.clear();
-
-        CommandExecutor.execute(command, this);
     }
 
     /**

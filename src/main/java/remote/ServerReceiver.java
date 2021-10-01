@@ -4,14 +4,11 @@ import client.InnerClient;
 import common.struct.impl.Sds;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import remote.protocol.Protocol;
 import remote.protocol.RequestParser;
-import remote.protocol.RequestType;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
-import java.util.Arrays;
 
 /**
  * 服务端接收请求的对象
@@ -69,9 +66,6 @@ public class ServerReceiver implements Receiver {
                     byte [] temp = new byte[this.socketBuffer.remaining()];
                     this.socketBuffer.get(temp);
                     this.queryBuffer.append(temp);
-
-                    // 测试，输出从网络中读取的数据
-                    logger.debug(new String(temp, Protocol.CHARSET));
                 }
 
                 this.socketBuffer.clear();
@@ -80,6 +74,10 @@ public class ServerReceiver implements Receiver {
 
             // 正常读取了数据，直接返回
             if (bytesCount > 0) {
+
+                // 测试，输出从网络中读取的数据
+                logger.debug("服务器接收到数据：" + this.queryBuffer.toString());
+
                 return bytesCount;
             }
 

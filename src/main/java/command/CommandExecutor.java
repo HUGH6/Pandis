@@ -2,7 +2,7 @@ package command;
 
 import client.InnerClient;
 import command.instance.GetCommand;
-import server.PandisServer;
+import command.instance.SetCommand;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,16 +13,19 @@ import java.util.Map;
  * @Date 2021/7/21
  **/
 public class CommandExecutor {
+    private final static CommandExecutor executor = new CommandExecutor();
 
     // Pandis的所有命令映射表
-    private static Map<String, AbstractCommand> commandTable = new HashMap<>();
+    private Map<String, AbstractCommand> commandTable = new HashMap<>();
 
-    {
-        // WANRING: 这里的实现有点问题，由于command内需要维持一个server的实例，这里获得的实例有可能是null
-        commandTable.put("get", new GetCommand(PandisServer.getInstance()));
+    private CommandExecutor() {
+        // 将所有命令的实现写入表中
+        commandTable.put("get", new GetCommand());
+        commandTable.put("set", new SetCommand());
     }
 
-    public CommandExecutor() {
+    public static CommandExecutor getExecutor() {
+        return executor;
     }
 
     /**
@@ -30,7 +33,7 @@ public class CommandExecutor {
      * @param commandName 命令名称
      * @return 命令实现
      */
-    public static AbstractCommand lookupCommand(String commandName) {
+    public AbstractCommand lookupCommand(String commandName) {
         return commandTable.get(commandName);
     }
 
@@ -38,7 +41,7 @@ public class CommandExecutor {
      * 核心方法执行命令
      * @param command 命令实现
      */
-    public static void execute(Command command, InnerClient client) {
+    public void execute(Command command, InnerClient client) {
         command.execute(client);
     }
 }

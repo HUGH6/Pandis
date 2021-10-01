@@ -9,7 +9,7 @@ import server.PandisServer;
  * @Date 2021-07-21
  */
 public class GetCommand extends GenericGetCommand {
-    public GetCommand(PandisServer server) {
+    public GetCommand() {
         super("get", 2, false, "r");
     }
 

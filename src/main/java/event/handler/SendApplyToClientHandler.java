@@ -45,6 +45,9 @@ public class SendApplyToClientHandler implements FileEventHandler {
      */
     @Override
     public boolean handle(PandisServer server, SelectionKey key, Object privateData) {
+        // 测试
+        logger.debug("SendApplyToClientHandler被调用");
+
         InnerClient client = (InnerClient) privateData;
 
         // 设置服务器的当前客户端
