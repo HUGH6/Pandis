@@ -204,7 +204,12 @@ public class ClientCli {
                 return false;
             } else {
                 if ("select".equals(command) && argc == 2) {
-                    config.setDbnum(Integer.valueOf(argv[startIndex + 1]));
+                    try {
+                        int dbId = Integer.valueOf(argv[startIndex + 1]);
+                        config.setDbnum(dbId);
+                    } catch (NumberFormatException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
 

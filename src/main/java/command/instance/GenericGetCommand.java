@@ -26,7 +26,7 @@ public abstract class GenericGetCommand extends AbstractCommand {
 
         // 尝试从数据库中取出键 c->argv[1] 对应的值对象
         // 如果键不存在时，向客户端发送回复信息，并返回 NULL
-        PandisObject value = db.lookupKey(args[1]);
+        PandisObject value = db.lookupByKey(args[1]);
         if (value == null) {
             client.replyNil();
             return;

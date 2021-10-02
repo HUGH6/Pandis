@@ -30,6 +30,10 @@ public class ServerContext {
         this.serverInstance = serverInstance;
     }
 
+    public PandisServer getServerInstance() {
+        return this.serverInstance;
+    }
+
     public void setServerConfig(ServerConfig serverConfig) {
         this.serverConfig = serverConfig;
     }

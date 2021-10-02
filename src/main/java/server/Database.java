@@ -39,7 +39,7 @@ public class Database {
      * @param key
      * @return
      */
-    public PandisObject lookupKey(PandisString key) {
+    public PandisObject lookupByKey(PandisString key) {
         PandisObject res = this.keySpace.get(key);
 
         if (res != null) {
@@ -108,7 +108,8 @@ public class Database {
         this.keySpace.clear();
     }
 
-    public void setExpire(PandisObject key, long l) {
-
+    public void setExpire(PandisString key, long when) {
+        this.expires.put(key, when);
     }
+
 }

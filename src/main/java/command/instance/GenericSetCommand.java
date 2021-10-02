@@ -56,8 +56,8 @@ public abstract class GenericSetCommand extends AbstractCommand {
 
         // 如果设置了 NX 或者 XX 参数，那么检查条件是否不符合这两个设置，在条件不符合时报错
         Database database = client.getDatabase();
-        if (nxExist(flags) && database.lookupKey(key) != null
-            || xxExist(flags) && database.lookupKey(key) == null) {
+        if (nxExist(flags) && database.lookupByKey(key) != null
+            || xxExist(flags) && database.lookupByKey(key) == null) {
             client.replyNil();
             return;
         }
@@ -68,11 +68,10 @@ public abstract class GenericSetCommand extends AbstractCommand {
         // todo
         // 将数据库设为脏
 
-        // todo
         // 为键设置过期时间
-        // if (expireTime != null) {
-        //     database.setExpire(key, System.currentTimeMillis() + milliseconds);
-        // }
+        if (expireTime != null) {
+            database.setExpire(key, System.currentTimeMillis() + milliseconds);
+        }
 
         // todo
         // 发送事件通知

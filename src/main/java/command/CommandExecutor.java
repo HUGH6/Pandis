@@ -1,8 +1,7 @@
 package command;
 
 import client.InnerClient;
-import command.instance.GetCommand;
-import command.instance.SetCommand;
+import command.instance.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,6 +21,10 @@ public class CommandExecutor {
         // 将所有命令的实现写入表中
         commandTable.put("get", new GetCommand());
         commandTable.put("set", new SetCommand());
+        commandTable.put("setnx", new SetnxCommand());
+        commandTable.put("setex", new SetexCommand());
+        commandTable.put("psetex", new PsetexCommand());
+        commandTable.put("select", new SelectCommand());
     }
 
     public static CommandExecutor getExecutor() {
