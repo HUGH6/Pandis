@@ -1,6 +1,6 @@
 package command;
 
-import server.ServerContext;
+import server.client.InnerClient;
 
 /**
  * @Description Command接口的骨架实现，具体Command实现都应该继承该骨架实现
@@ -52,4 +52,24 @@ public abstract class AbstractCommand implements Command{
         return this.isGreaterThanArity;
     }
 
+    @Override
+    public void execute(InnerClient client) {
+        if (!checkCommandArgs(client)) {
+            return;
+        }
+        doExecute(client);
+    }
+
+    /**
+     * 检查输入参数是否符合命令的要求
+     * @param client
+     * @return
+     */
+    public abstract boolean checkCommandArgs(InnerClient client);
+
+    /**
+     * 实际执行命令
+     * @param client
+     */
+    public abstract void doExecute(InnerClient client);
 }

@@ -3,7 +3,7 @@ package common.struct.impl;
 import common.struct.ObjectType;
 import common.struct.PandisString;
 import remote.protocol.Protocol;
-import utils.SafeEncoder;
+import common.utils.SafeEncoder;
 
 import java.util.Arrays;
 

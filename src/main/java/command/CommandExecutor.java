@@ -1,7 +1,7 @@
 package command;
 
-import client.InnerClient;
-import command.instance.*;
+import server.client.InnerClient;
+import command.commands.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,6 +30,11 @@ public class CommandExecutor {
         commandTable.put("exists", new ExistsCommand());
         commandTable.put("select", new SelectCommand());
         commandTable.put("ping", new PingCommand());
+        commandTable.put("echo", new EchoCommand());
+        commandTable.put("expire", new ExpireCommand());
+        commandTable.put("expireat", new ExpireAtCommand());
+        commandTable.put("pexpire", new PexpireCommand());
+        commandTable.put("pexpireat", new PexpireAtCommand());
     }
 
     public static CommandExecutor getExecutor() {
@@ -41,7 +46,7 @@ public class CommandExecutor {
      * @param commandName 命令名称
      * @return 命令实现
      */
-    public AbstractCommand lookupCommand(String commandName) {
+    public Command lookupCommand(String commandName) {
         return commandTable.get(commandName);
     }
 

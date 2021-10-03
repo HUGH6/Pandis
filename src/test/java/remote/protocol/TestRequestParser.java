@@ -1,6 +1,6 @@
 package remote.protocol;
 
-import client.InnerClient;
+import server.client.InnerClient;
 import common.struct.impl.Sds;
 import org.junit.Test;
 
@@ -29,10 +29,10 @@ public class TestRequestParser {
         final SocketChannel socketChannel = SocketChannel.open();
         final InnerClient client = (InnerClient) InnerClient.createClient(null);
         final Sds sds = Sds.createSds("*3\r\n$3\r\nSET\r\n$3\r\nMSG\r\n$5\r\nHELLO\r\n".getBytes(StandardCharsets.UTF_8));
-//        client.setQueryBuffer(sds);
+//        server.client.setQueryBuffer(sds);
 
-//        RequestProcessor.processMultiBulkRequestTest(client);
-//        final PandisObject[] argv = client.getArgv();
+//        RequestProcessor.processMultiBulkRequestTest(server.client);
+//        final PandisObject[] argv = server.client.getArgv();
 //        for(int i = 0; i < argv.length; i++){
 //            System.out.println(argv[i].getObj().toString());
 //        }

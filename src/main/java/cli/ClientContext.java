@@ -7,8 +7,7 @@ import org.apache.commons.logging.LogFactory;
 import remote.Response;
 import remote.protocol.Protocol;
 import remote.protocol.ResponseParser;
-import remote.Reply;
-import utils.SafeEncoder;
+import common.utils.SafeEncoder;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

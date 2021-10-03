@@ -48,7 +48,7 @@
 
         <!--  Checks for illegal instantiations where a factory method is preferred.
           Rationale: Depending on the project, for some classes it might be preferable to create instances through factory methods rather than calling the constructor.
-          A simple example is the java.lang.Boolean class. In order to save memory and CPU cycles, it is preferable to use the predefined constants TRUE and FALSE. Constructor invocations should be replaced by calls to Boolean.valueOf().
+          A simple example is the java.lang.Boolean class. In order to save memory and CPU cycles, it is preferable to use the predefined common.constants TRUE and FALSE. Constructor invocations should be replaced by calls to Boolean.valueOf().
           Some extremely performance sensitive projects may require the use of factory methods for other classes as well, to enforce the usage of number caches or object pools. -->
         <module name="IllegalInstantiation">
             <property name="classes" value="java.lang.Boolean"/>
@@ -91,7 +91,7 @@
             <property name="format" value="(^[a-z][a-zA-Z0-9_]{0,19}$)"/>
         </module>
 
-        <!-- constants (static,  final fields) -->
+        <!-- common.constants (static,  final fields) -->
         <module name="ConstantName">
             <property name="format" value="(^[A-Z0-9_]{0,19}$)"/>
         </module>
@@ -139,7 +139,7 @@
          -->
         <module name="TodoComment"/>
 
-        <!--  Checks that long constants are defined with an upper ell. That is ' L' and not 'l'. This is in accordance to the Java Language Specification,  Section 3.10.1.
+        <!--  Checks that long common.constants are defined with an upper ell. That is ' L' and not 'l'. This is in accordance to the Java Language Specification,  Section 3.10.1.
           检查是否在long类型是否定义了大写的L.字母小写l和数字1（一）很相似。
           looks a lot like 1. -->
         <module name="UpperEll"/>

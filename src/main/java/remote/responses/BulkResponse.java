@@ -1,10 +1,7 @@
 package remote.responses;
 
-import remote.Reply;
 import remote.Response;
-import remote.protocol.Protocol;
 import remote.protocol.ReplyType;
-import utils.SafeEncoder;
 
 /**
  * @Description

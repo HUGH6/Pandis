@@ -1,6 +1,6 @@
 package remote;
 
-import client.InnerClient;
+import server.client.InnerClient;
 import common.struct.impl.Sds;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

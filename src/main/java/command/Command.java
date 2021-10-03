@@ -1,6 +1,6 @@
 package command;
 
-import client.InnerClient;
+import server.client.InnerClient;
 
 /**
  * @Description Pandis命令抽象接口

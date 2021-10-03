@@ -1,10 +1,10 @@
 package remote.protocol;
 
-import client.InnerClient;
+import server.client.InnerClient;
 import common.struct.impl.Sds;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import utils.SdsUtil;
+import common.utils.SdsUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -101,7 +101,7 @@ public class RequestParser {
         if(indexLast == -1) {
             if(this.queryBuffer.length() > INLINE_MAX_SIZE) {
                 // todo 错误处理 ，
-                // client.addReply(ReplyType.ERROR, "Protocol error: too big inline request");
+                // server.client.addReply(ReplyType.ERROR, "Protocol error: too big inline request");
             }
             return false;
         }
@@ -119,7 +119,7 @@ public class RequestParser {
 
         if (commandArgs == null) {
             //todo 错误处理， Protocol error: unbalanced quotes in request
-            // client.addReply(ReplyType.ERROR, "Protocol error: unbalanced quotes in request");
+            // server.client.addReply(ReplyType.ERROR, "Protocol error: unbalanced quotes in request");
             return false;
         }
 
@@ -164,7 +164,7 @@ public class RequestParser {
             int firstDelimiterIndex = queryBuffer.indexOf('\r');
             if (firstDelimiterIndex == -1) {
                 if (queryBuffer.length() > INLINE_MAX_SIZE) {
-                    // client.addReply(ReplyType.ERROR, "Protocol error: too big mbulk count string");
+                    // server.client.addReply(ReplyType.ERROR, "Protocol error: too big mbulk count string");
                     return false;
                 }
             }
@@ -204,7 +204,7 @@ public class RequestParser {
                 if (delimiterIndex == -1) {
                     // 如果超过固定长度还没有\r\n，说明格式错误
                     if (queryBuffer.length() > INLINE_MAX_SIZE) {
-                        // client.addReply(ReplyType.ERROR, "Protocol error: too big bulk count string");
+                        // server.client.addReply(ReplyType.ERROR, "Protocol error: too big bulk count string");
                         return false;
                     }
                     // 如果只是单纯没找到\r\n，说明可能request数据还不全，暂时不解析
@@ -220,7 +220,7 @@ public class RequestParser {
                 // 比如 $3\r\nSET\r\n
                 if ((char) queryBuffer.charAt(parsePosition) != '$') {
                     // todo "Protocol error: expected '$', got '%c'"
-                    // client.addReply(ReplyType.ERROR, "Protocol error: expected '$'");
+                    // server.client.addReply(ReplyType.ERROR, "Protocol error: expected '$'");
                     return false;
                 }
 
@@ -228,7 +228,7 @@ public class RequestParser {
                 int bulkItemLength = Integer.parseInt(new String(queryBuffer.toArrayWithOutCopy(), parsePosition + 1, delimiterIndex - parsePosition - 1, Protocol.CHARSET));
                 if (bulkItemLength < 0 || bulkItemLength > 512 * 1024 * 1024) {
                     // todo Protocol error: invalid bulk length
-                    // client.addReply(ReplyType.ERROR, "Protocol error: invalid bulk length");
+                    // server.client.addReply(ReplyType.ERROR, "Protocol error: invalid bulk length");
                     return false;
                 }
 

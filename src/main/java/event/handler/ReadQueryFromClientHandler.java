@@ -1,6 +1,6 @@
 package event.handler;
 
-import client.InnerClient;
+import server.client.InnerClient;
 import event.FileEventHandler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

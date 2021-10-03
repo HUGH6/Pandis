@@ -1,6 +1,6 @@
 package event.handler;
 
-import client.InnerClient;
+import server.client.InnerClient;
 import event.FileEventHandler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -70,7 +70,7 @@ public class AcceptTcpHandler implements FileEventHandler {
         InnerClient newClient = (InnerClient) InnerClient.createClient(socketChannel);
         server.addClient(newClient);
 
-        logger.info("Accepted client connection from " + socketChannel.socket().getRemoteSocketAddress());
+        logger.info("Accepted server.client connection from " + socketChannel.socket().getRemoteSocketAddress());
 
         // 将这个与客户端关连的socketChannel也注册到EventLoop, 其中，客户端对象client以事件的clientData传入，这里暂时以null代替
         server.getEventLoop().registerFileEvent(socketChannel, SelectionKey.OP_READ, ReadQueryFromClientHandler.getHandler(), newClient);

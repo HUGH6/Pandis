@@ -1,6 +1,6 @@
 package deprecated.store;
 
-import utils.ByteUtil;
+import common.utils.ByteUtil;
 
 import java.util.Arrays;
 

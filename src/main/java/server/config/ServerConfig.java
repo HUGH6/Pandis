@@ -2,7 +2,7 @@ package server.config;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import utils.StringUtil;
+import common.utils.StringUtil;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -260,7 +260,7 @@ public class ServerConfig {
                 // TODO
             } else if ("slowlog-max-len".equals(option) && argv.length == 2) {
                 // TODO
-            } else if ("client-output-buffer-limit".equals(option) && argv.length == 5) {
+            } else if ("server.client-output-buffer-limit".equals(option) && argv.length == 5) {
                 // TODO
             } else if ("stop-writes-on-bgsave-error".equals(option) && argv.length == 2) {
                 // TODO

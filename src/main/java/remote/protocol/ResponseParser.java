@@ -1,9 +1,8 @@
 package remote.protocol;
 
-import remote.Reply;
 import remote.Response;
 import remote.responses.*;
-import utils.SafeEncoder;
+import common.utils.SafeEncoder;
 
 import java.util.ArrayList;
 import java.util.Arrays;

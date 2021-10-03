@@ -1,12 +1,12 @@
 package remote;
 
-import client.InnerClient;
+import server.client.InnerClient;
 import event.EventLoop;
 import event.handler.SendApplyToClientHandler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import server.ServerContext;
-import utils.SafeEncoder;
+import common.utils.SafeEncoder;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -186,7 +186,7 @@ public class ServerReplyer implements Replyer {
                         totalWrittenNum += writtenNum;
                     }
                 } catch (IOException e) {
-                    logger.error("Write reply to client error", e);
+                    logger.error("Write reply to server.client error", e);
                 }
 
                 return totalWrittenNum;
@@ -221,7 +221,7 @@ public class ServerReplyer implements Replyer {
                             totalWrittenNum += writtenNum;
                         }
                     } catch (IOException e) {
-                        logger.error("Write reply to client error", e);
+                        logger.error("Write reply to server.client error", e);
 
                         // 如果发送过程中发生异常，而消息又没有发完，则需要将这部分消息重新缓存起来
                         if (writtenSum < byteMessage.length) {

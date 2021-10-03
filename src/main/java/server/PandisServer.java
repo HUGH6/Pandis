@@ -1,9 +1,6 @@
 package server;
 
-import cli.ClientCli;
-import client.InnerClient;
-import com.sun.security.ntlm.Server;
-import common.struct.impl.Sds;
+import server.client.InnerClient;
 import event.handler.AcceptTcpHandler;
 import event.EventLoop;
 import org.apache.commons.logging.LogFactory;
@@ -214,7 +211,7 @@ public class PandisServer {
             client.distroy();
         }
 
-        logger.info("disconnect with client.");
+        logger.info("disconnect with server.client.");
     }
 
     public ServerConfig getServerConfig() {

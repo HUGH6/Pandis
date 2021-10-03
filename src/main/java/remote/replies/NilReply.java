@@ -3,7 +3,6 @@ package remote.replies;
 import remote.Reply;
 import remote.protocol.Protocol;
 import remote.protocol.ReplyType;
-import utils.SafeEncoder;
 
 /**
  * @Description

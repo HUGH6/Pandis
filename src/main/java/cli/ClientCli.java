@@ -2,10 +2,8 @@ package cli;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import remote.Reply;
 import remote.Response;
-import server.PandisServer;
-import utils.StringUtil;
+import common.utils.StringUtil;
 
 import java.util.Arrays;
 import java.util.List;
