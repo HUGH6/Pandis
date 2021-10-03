@@ -1,5 +1,6 @@
 package server;
 
+import common.expire.InertExpiration;
 import common.struct.PandisObject;
 import common.struct.PandisString;
 
@@ -12,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author: huzihan
  * @create: 2021-07-20
  */
-public class Database {
+public class Database implements InertExpiration {
 
     private Map<PandisString, PandisObject> keySpace;       // 数据库健空间，保存着数据库中所有的键值对, key是字符串，value是5种类型
     private Map<PandisString, Long> expires;                // 记录键的过期时间，key为键，值为过期时间 UNIX 时间戳
@@ -40,6 +41,9 @@ public class Database {
      * @return
      */
     public PandisObject lookupByKey(PandisString key) {
+        // 惰性删除策略，访问数据前如果数据到期，则进行惰性删除
+        delExpiredIfNeeded(key);
+
         PandisObject res = this.keySpace.get(key);
 
         if (res != null) {
@@ -81,7 +85,10 @@ public class Database {
      * @return
      */
     public boolean exists(PandisString key) {
-          return this.keySpace.containsKey(key);
+        // 惰性删除策略，访问数据前如果数据到期，则进行惰性删除
+        delExpiredIfNeeded(key);
+
+        return this.keySpace.containsKey(key);
     }
 
     /**
@@ -91,6 +98,9 @@ public class Database {
      * @return
      */
     public boolean delete(PandisString key) {
+        // 惰性删除策略，访问数据前如果数据到期，则进行惰性删除
+        delExpiredIfNeeded(key);
+
         PandisObject oldVal = this.keySpace.remove(key);
 
         if (oldVal == null) {
@@ -106,6 +116,7 @@ public class Database {
      */
     public void clear() {
         this.keySpace.clear();
+        this.expires.clear();
     }
 
     public void setExpire(PandisString key, long when) {
@@ -113,6 +124,9 @@ public class Database {
     }
 
     public long getExpire(PandisString key) {
+        // 惰性删除策略，访问数据前如果数据到期，则进行惰性删除
+        delExpiredIfNeeded(key);
+
         // 返回key的过期时间，如果不存在，则返回-1
         return this.expires.getOrDefault(key, -1L);
     }
@@ -121,4 +135,25 @@ public class Database {
         return this.expires.remove(key);
     }
 
+    @Override
+    public boolean isExpired(PandisString key) {
+        Long expire = this.expires.get(key);
+        if (expire == null) {
+            return false;
+        }
+
+        if (expire <= System.currentTimeMillis()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public void delExpiredIfNeeded(PandisString key) {
+        if (isExpired(key)) {
+            this.expires.remove(key);
+            this.keySpace.remove(key);
+        }
+    }
 }
