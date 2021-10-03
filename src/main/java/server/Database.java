@@ -90,13 +90,13 @@ public class Database {
      * @param key
      * @return
      */
-    public int delete(PandisString key) {
+    public boolean delete(PandisString key) {
         PandisObject oldVal = this.keySpace.remove(key);
 
         if (oldVal == null) {
-            return 0;
+            return false;
         } else {
-            return 1;
+            return true;
         }
     }
 

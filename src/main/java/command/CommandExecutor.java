@@ -24,7 +24,12 @@ public class CommandExecutor {
         commandTable.put("setnx", new SetnxCommand());
         commandTable.put("setex", new SetexCommand());
         commandTable.put("psetex", new PsetexCommand());
+        commandTable.put("append", new AppendCommand());
+        commandTable.put("strlen", new StrlenCommand());
+        commandTable.put("del", new DelCommand());
+        commandTable.put("exists", new ExistsCommand());
         commandTable.put("select", new SelectCommand());
+        commandTable.put("ping", new PingCommand());
     }
 
     public static CommandExecutor getExecutor() {

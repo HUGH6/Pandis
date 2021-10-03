@@ -7,4 +7,5 @@ package constants;
  */
 public class StatusConstants {
     public static final String OK_STATUS = "OK";
+    public static final String PONG_STATUS = "PONG";
 }

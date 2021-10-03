@@ -131,10 +131,12 @@ public class InnerClient implements Client {
         if (command == null) {
             // 没找到命令
             // 回复错误信息
+            replyError("unknow command " + commandName);
             return;
         } else if ((!command.isGreaterThanArity() && command.getArity() != this.commandArgs.size()) || this.commandArgs.size() < command.getArity()) {
             // 参数个数错误
             // 回复错误信息
+            replyError("wrong number of arguments for " + commandName + " command");
             return;
         }
 
@@ -262,6 +264,11 @@ public class InnerClient implements Client {
 
     public void replyBulk(PandisString s) {
         replyBulk(s.toString());
+    }
+
+    public void replyInteger(long l) {
+        Reply reply = ReplyBuilder.buildIntegerReply(l);
+        replyer.reply(reply, this);
     }
 
 }
