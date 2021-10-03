@@ -41,6 +41,10 @@ public abstract class GenericExpireCommand extends AbstractCommand {
             return;
         }
 
+        // 如果传入的是秒，则将其转成毫秒处理
+        if (unit == TimeUnit.SECONDS) {
+            when *= 1000;
+        }
         when += baseTime;
 
         Database db = client.getDatabase();

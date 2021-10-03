@@ -112,4 +112,13 @@ public class Database {
         this.expires.put(key, when);
     }
 
+    public long getExpire(PandisString key) {
+        // 返回key的过期时间，如果不存在，则返回-1
+        return this.expires.getOrDefault(key, -1L);
+    }
+
+    public Long removeExpire(PandisString key) {
+        return this.expires.remove(key);
+    }
+
 }

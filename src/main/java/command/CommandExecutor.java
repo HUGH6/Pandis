@@ -35,6 +35,9 @@ public class CommandExecutor {
         commandTable.put("expireat", new ExpireAtCommand());
         commandTable.put("pexpire", new PexpireCommand());
         commandTable.put("pexpireat", new PexpireAtCommand());
+        commandTable.put("ttl", new TtlCommand());
+        commandTable.put("pttl", new PttlCommand());
+        commandTable.put("persist", new PersistCommand());
     }
 
     public static CommandExecutor getExecutor() {
