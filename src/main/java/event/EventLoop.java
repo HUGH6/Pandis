@@ -9,6 +9,7 @@ import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.Selector;
 import java.nio.channels.SelectionKey;
+import java.sql.Time;
 import java.util.Map;
 import java.util.LinkedList;
 import java.util.HashMap;
@@ -76,14 +77,26 @@ public class EventLoop {
 
         // 获取最近的时间事件，根据时间事件计算需要阻塞的时长
         if (nearestTimeEvent != null) {
-            // nearestTimeEvent.getWhenMs();
-            // nearestTimeEvent.getWhenSec();
-        } else {
+            // 如果时间事件存在的话
+            // 那么根据最近可执行时间事件和现在时间的时间差来决定文件事件的阻塞时间
+            long when = nearestTimeEvent.getWhen();
+            long now = System.currentTimeMillis();
 
+            if (when <= now) {
+                // 说明时间事件已经执行，不需要阻塞
+                // 由于nio select无法立即返回，因此设置一个很短的时间1ms
+                blockTime = -1;
+            } else {
+                blockTime = when - now;
+            }
+        } else {
+            // 没有时间事件，则一直阻塞
+            blockTime = 0;
         }
 
         // 处理文件事件
         int processed = 0;
+
         processed += processFileEvents(blockTime);
 
         // 处理时间事件
@@ -100,7 +113,14 @@ public class EventLoop {
     private int processFileEvents(long timeout) {
         int processed = 0;
         try {
-            int readyNums = this.selector.select(timeout);
+            int readyNums = 0;
+
+            if (timeout == -1) {
+                readyNums = this.selector.selectNow();
+            } else {
+                readyNums = this.selector.select(timeout);
+            }
+
             if (readyNums > 0) {
                 Set<SelectionKey> selectionKeySet = this.selector.selectedKeys();
                 Iterator<SelectionKey> keyIterator = selectionKeySet.iterator();
@@ -255,6 +275,23 @@ public class EventLoop {
     private int processTimeEvents() {
         int processed = 0;
 
+        Iterator<TimeEvent> iterator = timeEvents.iterator();
+
+        while (iterator.hasNext()) {
+            TimeEvent e = iterator.next();
+
+            // 当前时间到达事件的时间, 则可以处理这些事件
+            if (e.getWhen() <= System.currentTimeMillis()) {
+                e.execute();
+
+                if (e instanceof CycleTimeEvent) {
+                    ((CycleTimeEvent) e).resetFireTime();
+                } else {
+                    iterator.remove();
+                }
+            }
+        }
+
         return processed;
     }
 
@@ -270,9 +307,7 @@ public class EventLoop {
                 if (nearestTimer == null) {
                     nearestTimer = e;
                 } else {
-                    if (e.getWhenSec() < nearestTimer.getWhenSec()
-                            || (e.getWhenSec() == nearestTimer.getWhenSec()
-                            && e.getWhenMs() < nearestTimer.getWhenMs())) {
+                    if (e.getWhen() < nearestTimer.getWhen()) {
                         nearestTimer = e;
                     }
                 }

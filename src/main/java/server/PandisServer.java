@@ -1,5 +1,6 @@
 package server;
 
+import event.GlobalCycleTimeEvent;
 import server.client.InnerClient;
 import event.handler.AcceptTcpHandler;
 import event.EventLoop;
@@ -93,12 +94,14 @@ public class PandisServer {
         ServerSocketChannel serverSocketChannel = null;
         try {
             serverSocketChannel = ServerSocketChannel.open();
-            serverSocketChannel.socket().bind(new InetSocketAddress(this.serverConfig.getPort()));
             serverSocketChannel.configureBlocking(false);
+            serverSocketChannel.socket().bind(new InetSocketAddress(this.serverConfig.getPort()));
         } catch (IOException e) {
             logger.fatal("Init the server socket channel error", e);
         }
 
+        // 注册时间事件
+        this.eventLoop.registerTimeEvent(new GlobalCycleTimeEvent(0, 100));
         // 创建并初始化数据库;
 
         // 向事件循环中的监听模块注册事件

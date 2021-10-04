@@ -26,14 +26,14 @@ public class TestEventLoop {
     public void testGetNearestTimer() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
 
         for (int i = 0; i < 10; i++) {
-            TimeEvent e = new TimeEvent(i, 10 - i, i * 10, new TimeProcedure() {
-                @Override
-                public int process(Object data) {
-                    System.out.println("....");
-                    return 0;
-                }
-            });
-            eventLoop.registerTimeEvent(e);
+//            TimeEvent e = new TimeEvent(i, 10 - i, i * 10, new TimeProcedure() {
+//                @Override
+//                public int process(Object data) {
+//                    System.out.println("....");
+//                    return 0;
+//                }
+//            });
+//            eventLoop.registerTimeEvent(e);
         }
 
         Class<EventLoop> clazz = EventLoop.class;
@@ -43,6 +43,6 @@ public class TestEventLoop {
         declaredMethod.setAccessible(false);
 
         TimeEvent nearestTimer = (TimeEvent)invoke;
-        Assert.assertEquals("1:90", nearestTimer.getWhenSec() + ":" + nearestTimer.getWhenMs());
+        Assert.assertEquals("1:90", nearestTimer.getWhen() + ":" + nearestTimer.getWhen());
     }
 }

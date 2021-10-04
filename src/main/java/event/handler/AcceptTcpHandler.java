@@ -61,7 +61,6 @@ public class AcceptTcpHandler implements FileEventHandler {
         try {
             socketChannel = ssc.accept();
             socketChannel.configureBlocking(false);
-
         } catch (IOException e) {
             e.printStackTrace();
         }
