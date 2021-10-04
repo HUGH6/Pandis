@@ -5,8 +5,7 @@ import common.expire.PeriodicExpiration;
 import common.struct.PandisObject;
 import common.struct.PandisString;
 
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -14,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author: huzihan
  * @create: 2021-07-20
  */
-public class Database implements InertExpiration, PeriodicExpiration {
+public class Database implements InertExpiration {
 
     private Map<PandisString, PandisObject> keySpace;       // 数据库健空间，保存着数据库中所有的键值对, key是字符串，value是5种类型
     private Map<PandisString, Long> expires;                // 记录键的过期时间，key为键，值为过期时间 UNIX 时间戳
@@ -24,6 +23,8 @@ public class Database implements InertExpiration, PeriodicExpiration {
 
     private int id;         // 数据库号码
     private long avgTtl;    // 统计信息，数据库健的评价TTL
+
+    private Random random = new Random();
 
     public Database(int id) {
         this.keySpace = new ConcurrentHashMap<>();
@@ -112,12 +113,25 @@ public class Database implements InertExpiration, PeriodicExpiration {
     }
 
     /**
+     * 从键空间和过期空间中移除key
+     * @param key
+     */
+    public void remove(PandisString key) {
+        this.keySpace.remove(key);
+        this.expires.remove(key);
+    }
+
+    /**
      * 清空数据库
      * @return
      */
     public void clear() {
         this.keySpace.clear();
         this.expires.clear();
+    }
+
+    public int expiredKeyNums() {
+        return this.expires.size();
     }
 
     public void setExpire(PandisString key, long when) {
@@ -158,23 +172,9 @@ public class Database implements InertExpiration, PeriodicExpiration {
         }
     }
 
-    @Override
-    public void delExpiredPeriodicaly() {
-
-    }
-
-    public void removeExpiredKeys() {
-        Set<Map.Entry<PandisString, Long>> entries = this.expires.entrySet();
-
-        Long now = System.currentTimeMillis();
-
-        for (Map.Entry e : entries) {
-            if ((Long)e.getValue() < now) {
-                System.out.println("delete expired key: " + e.getKey().toString());
-
-                this.expires.remove(e.getKey());
-                this.keySpace.remove(e.getKey());
-            }
-        }
+    public Map.Entry<PandisString, Long> randomExpire() {
+        List<Map.Entry<PandisString, Long>> keys = new ArrayList<>(this.expires.entrySet());
+        Map.Entry<PandisString, Long> randomEntry = keys.get(random.nextInt(keys.size()));
+        return randomEntry;
     }
 }

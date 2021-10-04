@@ -35,6 +35,11 @@ public class PandisServer {
 
     private Database[] databases;
 
+    /**
+     * slave模式
+     */
+    private String masterHost;
+
     public PandisServer() {
         super();
     }
@@ -231,6 +236,10 @@ public class PandisServer {
 
     private void usage() {
 
+    }
+
+    public String getMasterHost() {
+        return this.masterHost;
     }
 }
 

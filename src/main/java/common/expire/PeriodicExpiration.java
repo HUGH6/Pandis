@@ -8,5 +8,10 @@ import common.struct.PandisString;
  * @Date 2021/10/4
  **/
 public interface PeriodicExpiration {
-    void delExpiredPeriodicaly();
+    int FAST_MODE = 0;
+    int SLOW_MODE = 1;
+    int EXPIRE_CYCLE_FAST_DURATION = 1000;
+
+    void delExpiredPeriodicaly(int mode);
+
 }

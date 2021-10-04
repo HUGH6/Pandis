@@ -24,6 +24,8 @@ public class ServerConfig {
     private String requirePassword; // 是否设置了密码
     private boolean daemonize;      // 是否以守护进程运行
 
+    private boolean isActiveExpiredEnable;
+
     public static final int DEFAULT_PORT = 6379;
     public static final int DEFAULT_HZ = 10;
     public static final int DEFAULT_DB_NUMBER = 16;
@@ -41,6 +43,7 @@ public class ServerConfig {
         this.dbNumber = DEFAULT_DB_NUMBER;
         this.requirePassword = null;
         this.daemonize = false;
+        this.isActiveExpiredEnable = true;
     }
 
     public static ServerConfig build() {
@@ -57,6 +60,7 @@ public class ServerConfig {
             serverConfig.dbNumber = builder.dbNumber;
             serverConfig.requirePassword = builder.requirePassword;
             serverConfig.daemonize = builder.daemonize;
+            serverConfig.isActiveExpiredEnable = builder.isActiveExpiredEnable;
         }
 
         return serverConfig;
@@ -323,6 +327,10 @@ public class ServerConfig {
         return this.daemonize;
     }
 
+    public boolean isActiveExpiredEnable() {
+        return this.isActiveExpiredEnable;
+    }
+
     public static class ServerConfigBuilder {
         private String configfile;      // 配置文件路径
         private int port;               // 服务器默认端口
@@ -330,6 +338,7 @@ public class ServerConfig {
         private int dbNumber;
         private String requirePassword; // 是否设置了密码
         private boolean daemonize;      // 是否以守护进程运行
+        private boolean isActiveExpiredEnable;
 
         public ServerConfigBuilder() {
             this.configfile = null;      // 配置文件路径
@@ -338,6 +347,7 @@ public class ServerConfig {
             this.dbNumber = DEFAULT_DB_NUMBER;
             this.requirePassword = null;
             this.daemonize = false;
+            this.isActiveExpiredEnable = true;
         }
 
         public ServerConfigBuilder setPort(int port) {

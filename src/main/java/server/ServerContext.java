@@ -41,4 +41,8 @@ public class ServerContext {
     public void setEventLoop(EventLoop eventLoop) {
         this.eventLoop = eventLoop;
     }
+
+    public ServerConfig getServerConfig() {
+        return this.serverConfig;
+    }
 }
