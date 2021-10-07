@@ -1,9 +1,8 @@
 package command.commands;
 
 import command.AbstractCommand;
-import common.struct.PandisObject;
 import common.struct.impl.Sds;
-import server.Database;
+import database.Database;
 import server.client.InnerClient;
 
 import java.util.List;

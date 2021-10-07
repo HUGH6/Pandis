@@ -1,6 +1,6 @@
 package common.utils;
 
-import deprecated.Sds;
+import common.struct.impl.Sds;
 import org.junit.Test;
 
 /**

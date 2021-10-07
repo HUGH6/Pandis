@@ -77,6 +77,7 @@ public class ClientConfig {
         this.mbDelim = null;
         this.eval = null;
 
+        // todo
         if (!(System.console() == null) && System.getenv("FAKETTY") == null) {
             this.outputType = OutputType.OUTPUT_RAW;
         } else {

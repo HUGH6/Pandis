@@ -6,7 +6,7 @@ import common.struct.PandisObject;
 import common.struct.PandisString;
 import common.struct.impl.Sds;
 import common.constants.ErrorConstants;
-import server.Database;
+import database.Database;
 
 import java.util.List;
 

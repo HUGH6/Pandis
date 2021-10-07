@@ -38,6 +38,12 @@ public class CommandExecutor {
         commandTable.put("ttl", new TtlCommand());
         commandTable.put("pttl", new PttlCommand());
         commandTable.put("persist", new PersistCommand());
+        commandTable.put("subscribe", new SubscribeCommand());
+        commandTable.put("unsubscribe", new UnsubscribeCommand());
+        commandTable.put("psubscribe", new PsubscribeCommand());
+        commandTable.put("punsubscribe", new PunsubscribeCommand());
+        commandTable.put("publish", new PublishCommand());
+        commandTable.put("pubsub", new PubsubCommand());
     }
 
     public static CommandExecutor getExecutor() {

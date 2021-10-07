@@ -6,7 +6,7 @@ import common.struct.PandisString;
 import common.constants.StatusConstants;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import server.Database;
+import database.Database;
 
 import java.util.concurrent.TimeUnit;
 

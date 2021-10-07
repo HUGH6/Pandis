@@ -1,4 +1,4 @@
-package deprecated.store;
+package common.struct.impl;
 
 import common.utils.ByteUtil;
 

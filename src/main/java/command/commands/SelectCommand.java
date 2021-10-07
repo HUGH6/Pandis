@@ -4,7 +4,7 @@ import server.client.InnerClient;
 import command.AbstractCommand;
 import common.struct.impl.Sds;
 import common.constants.StatusConstants;
-import server.Database;
+import database.Database;
 import server.ServerContext;
 import common.utils.StringUtil;
 

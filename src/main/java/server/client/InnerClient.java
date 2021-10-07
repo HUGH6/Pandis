@@ -7,9 +7,11 @@ import common.struct.PandisString;
 import common.struct.impl.Sds;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import pubsub.Channel;
+import pubsub.Pattern;
 import remote.*;
 import remote.protocol.RequestType;
-import server.Database;
+import database.Database;
 import server.PandisServer;
 import server.ServerContext;
 
@@ -48,11 +50,28 @@ public class InnerClient implements Client {
     // 请求的类型：内联命令还是多条命令
     private volatile RequestType requestType;
 
+    /**********************************************
+     * 订阅发布功能
+     *********************************************/
+
+    // 这个字典记录了客户端所有订阅的频道
+    // 键为频道名字，值为 NULL
+    // 也即是，一个频道的集合
+    private Map<String, Channel> pubSubChannels;
+
+    // 链表，包含多个 pubsubPattern 结构
+    // 记录了所有订阅频道的客户端的信息
+    // 新 pubsubPattern 结构总是被添加到表尾
+    private Map<String, Pattern> pubSubPatterns;
+
     public int getFlags() {
         return this.flags;
     }
 
-    private InnerClient() {}
+    private InnerClient() {
+        this.pubSubChannels = new HashMap<>();
+        this.pubSubPatterns = new HashMap<>();
+    }
 
     /**
      * 创建Client的静态工厂
@@ -270,4 +289,53 @@ public class InnerClient implements Client {
         replyer.reply(reply, this);
     }
 
+    public void replyMultiBulk(List<String> bulks) {
+        Reply reply = ReplyBuilder.buildMultiBulkReply(bulks);
+        replyer.reply(reply, this);
+    }
+
+    public Map<String, Channel> getPubSubChannels() {
+        return this.pubSubChannels;
+    }
+
+    public Map<String, Pattern> getPubSubPatterns() {
+        return this.pubSubPatterns;
+    }
+
+    /**
+     * 将channel添加到client的订阅列表中
+     * @param channel
+     * @return
+     */
+    public boolean subscribeChannel(Channel channel) {
+        if (this.pubSubChannels.containsKey(channel.getName())) {
+            return false;
+        } else {
+            this.pubSubChannels.put(channel.getName(), channel);
+            return true;
+        }
+    }
+
+    public boolean unsubscribeChannel(String channelName) {
+        if (this.pubSubChannels.remove(channelName) != null) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean subscribePattern(Pattern pattern) {
+        if (this.pubSubPatterns.containsKey(pattern.getName())) {
+            return false;
+        } else {
+            this.pubSubPatterns.put(pattern.getName(), pattern);
+            return true;
+        }
+    }
+
+    public boolean unsubscribePattern(String patternName) {
+        if (this.pubSubPatterns.remove(patternName) != null) {
+            return true;
+        }
+        return false;
+    }
 }

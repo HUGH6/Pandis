@@ -190,8 +190,16 @@ public class ClientCli {
                 // todo
             }
 
+            // 表示当前cli客户端处于订阅模式，要一直监听网络，监听服务器发来的发布信息
             if (config.isPubsubMode()) {
-                // todo
+                if (config.getOutputType() == ClientConfig.OutputType.OUTPUT_RAW) {
+                    System.out.println("Reading messages... (press Ctrl-C to quit)\n");
+                }
+                while (true) {
+                    if (!readReply(outputRaw)) {
+                        System.exit(1);
+                    }
+                }
             }
 
             if (config.isSlaveMode()) {

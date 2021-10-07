@@ -274,7 +274,7 @@ public class ServerConfig {
                 // TODO
             } else if ("min-slaves-max-lag".equals(option) && argv.length == 2) {
                 // TODO
-            } else if ("notify-keyspace-events".equals(option) && argv.length == 2) {
+            } else if ("pubsub.notify-keyspace-events".equals(option) && argv.length == 2) {
                 // TODO
             } else if ("sentinel".equals(option)) {
                 // TODO

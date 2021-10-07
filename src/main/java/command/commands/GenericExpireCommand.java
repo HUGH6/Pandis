@@ -3,7 +3,7 @@ package command.commands;
 import server.client.InnerClient;
 import command.AbstractCommand;
 import common.struct.impl.Sds;
-import server.Database;
+import database.Database;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;

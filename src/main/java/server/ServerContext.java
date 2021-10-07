@@ -1,5 +1,6 @@
 package server;
 
+import database.Database;
 import event.EventLoop;
 import server.config.ServerConfig;
 
@@ -18,7 +19,7 @@ public class ServerContext {
         return context;
     }
 
-    public Database [] getDatabases() {
+    public Database[] getDatabases() {
         return serverInstance.getDatabases();
     }
 

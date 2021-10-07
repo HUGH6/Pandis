@@ -1,20 +1,21 @@
 package command.commands;
 
-import server.client.InnerClient;
 import command.AbstractCommand;
 import common.struct.impl.Sds;
-import database.Database;
+import pubsub.PubSub;
+import server.ServerContext;
+import server.client.InnerClient;
 
 import java.util.List;
 
 /**
  * @Description
  * @Author huzihan
- * @Date 2021/10/2
+ * @Date 2021/10/6
  **/
-public class DelCommand extends AbstractCommand {
-    public DelCommand() {
-        super("del", 2, true, "w");
+public class PsubscribeCommand extends AbstractCommand {
+    public PsubscribeCommand() {
+        super("psubscribe", 2, true, "rpslt");
     }
 
     @Override
@@ -25,20 +26,10 @@ public class DelCommand extends AbstractCommand {
     @Override
     public void doExecute(InnerClient client) {
         List<Sds> commandArgs = client.getCommandArgs();
-
-        Database db = client.getDatabase();
-
-        int deleted = 0;
+        PubSub pubSub = ServerContext.getContext().getServerInstance().getPubSub();
 
         for (int i = 1; i < commandArgs.size(); i++) {
-            // todo
-            // 先删除过期的健
-
-            if (db.delete(commandArgs.get(i))) {
-                deleted++;
-            }
+            pubSub.subscribePattern(client, commandArgs.get(i).toString());
         }
-
-        client.replyInteger(deleted);
     }
 }

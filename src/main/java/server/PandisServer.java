@@ -1,6 +1,8 @@
 package server;
 
+import database.Database;
 import event.GlobalCycleTimeEvent;
+import pubsub.PubSub;
 import server.client.InnerClient;
 import event.handler.AcceptTcpHandler;
 import event.EventLoop;
@@ -39,6 +41,12 @@ public class PandisServer {
      * slave模式
      */
     private String masterHost;
+
+    /********************************************************
+     * pubsub订阅功功能
+     *******************************************************/
+
+    private PubSub pubSub;
 
     public PandisServer() {
         super();
@@ -88,6 +96,9 @@ public class PandisServer {
 
         // 创建保存客户端结构的链表
         this.clients = new LinkedList<>();
+
+        // 订阅发布
+        this.pubSub = new PubSub();
 
         // 创建数据库
         this.databases = new Database[this.serverConfig.getDbNumber()];
@@ -240,6 +251,10 @@ public class PandisServer {
 
     public String getMasterHost() {
         return this.masterHost;
+    }
+
+    public PubSub getPubSub() {
+        return this.pubSub;
     }
 }
 
