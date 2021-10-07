@@ -61,5 +61,32 @@ cli.ClientCli.main()
 ## 单机功能完善（8月中旬-9月中旬）
 * 客户端
     * [x] 命令行客户端初步完成
+* 命令
+    * [x] append
+    * [x] del
+    * [x] echo
+    * [x] exists
+    * [x] expire
+    * [x] expireat
+    * [x] get
+    * [x] persist
+    * [x] pexpire
+    * [x] pexpireat
+    * [x] ping
+    * [x] psetex
+    * [x] psubscribe
+    * [x] pttl
+    * [x] publish
+    * [x] pubsub
+    * [x] punsubscribe
+    * [x] select
+    * [x] set
+    * [x] setex
+    * [x] setnx
+    * [x] strlen
+    * [x] subscribe
+    * [x] ttl
+    * [x] unsubscribe
 * 两种持久化方式
 * 发布/订阅功能
+    * [x] 发布订阅相关功能
