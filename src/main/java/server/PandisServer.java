@@ -1,6 +1,8 @@
 package server;
 
+import common.persistence.AOFPersistence;
 import database.Database;
+import event.EventLoopBeforeSleepProcedure;
 import event.GlobalCycleTimeEvent;
 import pubsub.PubSub;
 import server.client.InnerClient;
@@ -48,6 +50,13 @@ public class PandisServer {
 
     private PubSub pubSub;
 
+    /********************************************************
+     * AOF持久化功能
+     *******************************************************/
+
+    private AOFPersistence aofPersistence;
+
+
     public PandisServer() {
         super();
     }
@@ -91,6 +100,7 @@ public class PandisServer {
     private void initServer() {
         // 创建事件循环对象
         this.eventLoop = EventLoop.createEventLoop();
+        this.eventLoop.setBeforeSleep(new EventLoopBeforeSleepProcedure());
 
         ServerContext.getContext().setEventLoop(this.eventLoop);
 
@@ -99,6 +109,9 @@ public class PandisServer {
 
         // 订阅发布
         this.pubSub = new PubSub();
+
+        // aof持久化
+        this.aofPersistence = new AOFPersistence(this.serverConfig.getAofFileName(), this.serverConfig.getAppendFsync());
 
         // 创建数据库
         this.databases = new Database[this.serverConfig.getDbNumber()];
@@ -255,6 +268,10 @@ public class PandisServer {
 
     public PubSub getPubSub() {
         return this.pubSub;
+    }
+
+    public AOFPersistence getAofPersistence() {
+        return this.aofPersistence;
     }
 }
 

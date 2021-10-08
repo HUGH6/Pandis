@@ -1,9 +1,15 @@
 package command;
 
+import common.persistence.AOFPersistence;
+import common.persistence.AofFsyncFrequency;
+import common.struct.impl.Sds;
+import server.ServerContext;
 import server.client.InnerClient;
 import command.commands.*;
+import server.config.ServerConfig;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -64,6 +70,31 @@ public class CommandExecutor {
      * @param command 命令实现
      */
     public void execute(Command command, InnerClient client) {
+        beforeExecute(client);
+        // 执行命令
         command.execute(client);
+        afterExecute(client);
+    }
+
+    /**
+     * 在命令执行之前执行
+     * @param client
+     */
+    public void beforeExecute(InnerClient client) {
+
+    }
+    /**
+     * 在命令执行之后进行
+     * (1) 如果AOF启用，则进行AOF持久化
+     * @param client
+     */
+    public void afterExecute(InnerClient client) {
+        // 将命令传播到AOF模块，进行AOF持久化
+        ServerConfig config = ServerContext.getContext().getServerConfig();
+        if (config.isAofOn()) {
+            AOFPersistence aofPersistence = ServerContext.getContext().getServerInstance().getAofPersistence();
+            List<Sds> commands = client.getCommandArgs();
+            aofPersistence.feedCommand(commands, client.getDatabase().getId());
+        }
     }
 }

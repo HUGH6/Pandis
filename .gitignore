@@ -36,3 +36,5 @@ fabric.properties
 
 # log file
 logs/
+
+*.aof

@@ -1,6 +1,7 @@
 package event;
 
 import common.expire.PeriodicExpirator;
+import common.persistence.AOFPersistence;
 import server.PandisServer;
 import server.ServerContext;
 
@@ -38,6 +39,13 @@ public class GlobalCycleTimeEvent implements CycleTimeEvent {
     public void execute() {
         // 对数据库执行各种操作
         databasesCron();
+
+        // AOF持久化
+        // 考虑是否需要将 AOF 缓冲区中的内容写入到 AOF 文件中
+        AOFPersistence aofPersistence = ServerContext.getContext().getServerInstance().getAofPersistence();
+        if (aofPersistence.getAofFlushPostponedStart() > 0) {
+            aofPersistence.flushAppendOnlyFile(false);
+        }
     }
 
     @Override

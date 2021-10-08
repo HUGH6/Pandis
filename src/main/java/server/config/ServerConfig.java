@@ -1,5 +1,6 @@
 package server.config;
 
+import common.persistence.AofFsyncFrequency;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import common.utils.StringUtil;
@@ -23,6 +24,10 @@ public class ServerConfig {
     private int dbNumber;           // 数据库数量
     private String requirePassword; // 是否设置了密码
     private boolean daemonize;      // 是否以守护进程运行
+    private boolean aof;            // 是否开启aof持久化
+    private String aofFileName;     // aof持久化存储的文件路径
+    private AofFsyncFrequency appendFsync;  // aof写入文件后，将数据从系统缓冲区强制同步到磁盘的频率
+
 
     private boolean isActiveExpiredEnable;
 
@@ -33,6 +38,7 @@ public class ServerConfig {
     public static final int AUTHPASS_MAX_LEN = 512;
     public static final int MIN_HZ = 1;
     public static final int MAX_HZ = 500;
+    public static final String DEFAULT_AOF_FILE_NAME = "appendonly.aof";
 
     private ServerConfig() {
         super();
@@ -43,6 +49,9 @@ public class ServerConfig {
         this.dbNumber = DEFAULT_DB_NUMBER;
         this.requirePassword = null;
         this.daemonize = false;
+        this.aof = false;
+        this.aofFileName = DEFAULT_AOF_FILE_NAME;
+        this.appendFsync = AofFsyncFrequency.EVERY_SECONDS;
         this.isActiveExpiredEnable = true;
     }
 
@@ -60,6 +69,9 @@ public class ServerConfig {
             serverConfig.dbNumber = builder.dbNumber;
             serverConfig.requirePassword = builder.requirePassword;
             serverConfig.daemonize = builder.daemonize;
+            serverConfig.aof = builder.aof;
+            serverConfig.aofFileName = builder.aofFileName;
+            serverConfig.appendFsync = builder.appendFsync;
             serverConfig.isActiveExpiredEnable = builder.isActiveExpiredEnable;
         }
 
@@ -209,13 +221,46 @@ public class ServerConfig {
                 }
                 this.hz = hz;
             } else if ("appendonly".equals(option) && argv.length == 2) {
-                // TODO
+                // 是否开启aof持久化的配置选项
+                boolean yes = false;
+                String param = argv[1].toLowerCase();
+                if (param.equals("yes")) {
+                    yes = true;
+                } else if (param.equals("no")) {
+                    yes = false;
+                } else {
+                    err = "argument must be 'yes' or 'no'";
+                    printFatalConfigError(lineNum, lines[i], err);
+                }
+
+                this.aof = yes;
             } else if ("appendfilename".equals(option) && argv.length == 2) {
-                // TODO
+                // 自定义aof持久化文件路径的配置选项
+                File appendFile = new File(argv[1]);
+                if (appendFile.isDirectory()) {
+                    err = "appendfilename can't be a path, just a filename";
+                    printFatalConfigError(lineNum, lines[i], err);
+                }
+                this.aofFileName = argv[1];
             } else if ("no-appendfsync-on-rewrite".equals(option)) {
                 // TODO
             } else if ("appendfsync".equals(option) && argv.length == 2) {
-                // TODO
+                // 定义将写入文件的数据从系统缓冲区同步到磁盘的频率
+                String frequency = argv[1].toLowerCase();
+                switch (frequency) {
+                    case "no":
+                        this.appendFsync = AofFsyncFrequency.NO;
+                        break;
+                    case "everysec":
+                        this.appendFsync = AofFsyncFrequency.EVERY_SECONDS;
+                        break;
+                    case "always":
+                        this.appendFsync = AofFsyncFrequency.ALWAYS;
+                        break;
+                    default:
+                        err = "argument must be 'no', 'always' or 'everysec'";
+                        printFatalConfigError(lineNum, lines[i], err);
+                }
             } else if ("auto-aof-rewrite-percentage".equals(option) && argv.length == 2) {
                 // TODO
             } else if ("auto-aof-rewrite-min-size".equals(option) && argv.length == 2) {
@@ -327,6 +372,18 @@ public class ServerConfig {
         return this.daemonize;
     }
 
+    public boolean isAofOn() {
+        return this.aof;
+    }
+
+    public String getAofFileName() {
+        return this.aofFileName;
+    }
+
+    public AofFsyncFrequency getAppendFsync() {
+        return this.appendFsync;
+    }
+
     public boolean isActiveExpiredEnable() {
         return this.isActiveExpiredEnable;
     }
@@ -338,6 +395,9 @@ public class ServerConfig {
         private int dbNumber;
         private String requirePassword; // 是否设置了密码
         private boolean daemonize;      // 是否以守护进程运行
+        private boolean aof;
+        private String aofFileName;
+        private AofFsyncFrequency appendFsync;
         private boolean isActiveExpiredEnable;
 
         public ServerConfigBuilder() {
@@ -347,6 +407,9 @@ public class ServerConfig {
             this.dbNumber = DEFAULT_DB_NUMBER;
             this.requirePassword = null;
             this.daemonize = false;
+            this.aof = false;
+            this.aofFileName = DEFAULT_AOF_FILE_NAME;
+            this.appendFsync = AofFsyncFrequency.EVERY_SECONDS;
             this.isActiveExpiredEnable = true;
         }
 
@@ -379,6 +442,22 @@ public class ServerConfig {
             this.daemonize = daemonize;
             return this;
         }
+
+        public ServerConfigBuilder setAof(boolean on) {
+            this.aof = on;
+            return this;
+        }
+
+        public ServerConfigBuilder setAofFileName(String fileName) {
+            this.aofFileName = fileName;
+            return this;
+        }
+
+        public ServerConfigBuilder setAppendFsync(AofFsyncFrequency frequency) {
+            this.appendFsync = frequency;
+            return this;
+        }
+
     }
 
     public void printConfig() {

@@ -8,6 +8,6 @@ package event;
  * @create: 2021-06-27
  */
 @FunctionalInterface
-public interface TimeProcedure {
-    int process(Object data);
+public interface Procedure<T> {
+    void call(T t);
 }

@@ -7,15 +7,10 @@ import server.PandisServer;
 import java.io.IOException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectableChannel;
-import java.nio.channels.Selector;
 import java.nio.channels.SelectionKey;
-import java.sql.Time;
-import java.util.Map;
-import java.util.LinkedList;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.Iterator;
-import java.util.Collections;
+import java.nio.channels.Selector;
+import java.util.*;
+import java.util.function.Function;
 
 /**
  * @description: 事件循环（线程不安全）
@@ -34,6 +29,8 @@ public class EventLoop {
     private Map<SelectionKey, FileEvent> fileEvents;
     // 时间事件列表，每次事件循环都会重中取出最近的时间事件进行处理
     private LinkedList<TimeEvent> timeEvents;
+
+    private Procedure<EventLoop> beforeSleep;
 
     private EventLoop() {
         this.stop = false;
@@ -62,6 +59,12 @@ public class EventLoop {
         this.stop = false;
 
         while (!stop) {
+            // 如果有需要在事件处理之前执行的函数，就执行
+            if (this.beforeSleep != null) {
+                beforeSleep.call(this);
+            }
+
+            // 开始处理事件
             processEvents();
         }
     }
@@ -327,5 +330,13 @@ public class EventLoop {
 
     public Selector getSelector() {
         return this.selector;
+    }
+
+    public void setBeforeSleep(Procedure<EventLoop> beforeSleep) {
+        this.beforeSleep = beforeSleep;
+    }
+
+    public Procedure<EventLoop> getBeforeSleep() {
+        return this.beforeSleep;
     }
 }

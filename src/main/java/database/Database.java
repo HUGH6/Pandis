@@ -177,4 +177,8 @@ public class Database implements InertExpiration {
         Map.Entry<PandisString, Long> randomEntry = keys.get(random.nextInt(keys.size()));
         return randomEntry;
     }
+
+    public int getId() {
+        return this.id;
+    }
 }
