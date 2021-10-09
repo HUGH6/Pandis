@@ -49,10 +49,9 @@ public class AOFPersistence {
     private long aofFlushPostponedStart;
 
     private ReentrantLock lock = new ReentrantLock();
-    private boolean is = false;
+    private volatile boolean backgroundFsyncInProcess;
 
     private int aofSelectedDbId;    // 用来表示当前命令的数据库id
-
 
     public AOFPersistence(String aofFileName, AofFsyncFrequency appendFsync) {
         this.aofFileName = aofFileName;
@@ -78,6 +77,8 @@ public class AOFPersistence {
         this.aofBuffer = Sds.createEmptySds();
         this.aofLastFsync = -1;
         this.aofFlushPostponedStart = 0;
+
+        this.backgroundFsyncInProcess = false;
 
         this.aofSelectedDbId = -1;
     }
@@ -119,7 +120,7 @@ public class AOFPersistence {
         // 如果是everysec的情况，有可能遇到有fsync正在运行，那么为了主线程不阻塞，可以适当进行推迟
         if (this.appendFsync == AofFsyncFrequency.EVERY_SECONDS) {
             // todo
-            // fsyncInProgress = ?;
+             fsyncInProgress = this.backgroundFsyncInProcess;
 
             if (!force) {
                 if (fsyncInProgress) {
@@ -232,17 +233,23 @@ public class AOFPersistence {
     }
 
     private void fsyncBackground(FileDescriptor fd) {
+        AOFPersistence instance = this;
 
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
                 lock.lock();
+                instance.backgroundFsyncInProcess = true;
+                lock.unlock();
+
                 try {
                     System.out.println("开始aof持久化");
                     fd.sync();
                 } catch (SyncFailedException e) {
                     e.printStackTrace();
                 } finally {
+                    lock.lock();
+                    instance.backgroundFsyncInProcess = false;
                     lock.unlock();
                 }
             }
