@@ -181,4 +181,8 @@ public class Database implements InertExpiration {
     public int getId() {
         return this.id;
     }
+
+    public Map<PandisString, PandisObject> getKeySpace() {
+        return this.keySpace;
+    }
 }

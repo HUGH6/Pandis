@@ -27,6 +27,7 @@ public class ServerConfig {
     private boolean aof;            // 是否开启aof持久化
     private String aofFileName;     // aof持久化存储的文件路径
     private AofFsyncFrequency appendFsync;  // aof写入文件后，将数据从系统缓冲区强制同步到磁盘的频率
+    private String rdbFileName;     // rdb持久化存储的文件路径
 
 
     private boolean isActiveExpiredEnable;
@@ -39,6 +40,7 @@ public class ServerConfig {
     public static final int MIN_HZ = 1;
     public static final int MAX_HZ = 500;
     public static final String DEFAULT_AOF_FILE_NAME = "appendonly.aof";
+    public static final String DEFAULT_RDB_FILE_NAME = "dump.rdb";
 
     private ServerConfig() {
         super();
@@ -52,6 +54,7 @@ public class ServerConfig {
         this.aof = false;
         this.aofFileName = DEFAULT_AOF_FILE_NAME;
         this.appendFsync = AofFsyncFrequency.EVERY_SECONDS;
+        this.rdbFileName = DEFAULT_RDB_FILE_NAME;
         this.isActiveExpiredEnable = true;
     }
 
@@ -72,6 +75,7 @@ public class ServerConfig {
             serverConfig.aof = builder.aof;
             serverConfig.aofFileName = builder.aofFileName;
             serverConfig.appendFsync = builder.appendFsync;
+            serverConfig.rdbFileName = builder.rdbFileName;
             serverConfig.isActiveExpiredEnable = builder.isActiveExpiredEnable;
         }
 
@@ -384,6 +388,10 @@ public class ServerConfig {
         return this.appendFsync;
     }
 
+    public String getRdbFileName() {
+        return this.rdbFileName;
+    }
+
     public boolean isActiveExpiredEnable() {
         return this.isActiveExpiredEnable;
     }
@@ -398,6 +406,7 @@ public class ServerConfig {
         private boolean aof;
         private String aofFileName;
         private AofFsyncFrequency appendFsync;
+        private String rdbFileName;
         private boolean isActiveExpiredEnable;
 
         public ServerConfigBuilder() {
@@ -410,6 +419,7 @@ public class ServerConfig {
             this.aof = false;
             this.aofFileName = DEFAULT_AOF_FILE_NAME;
             this.appendFsync = AofFsyncFrequency.EVERY_SECONDS;
+            this.rdbFileName = DEFAULT_RDB_FILE_NAME;
             this.isActiveExpiredEnable = true;
         }
 
@@ -458,6 +468,10 @@ public class ServerConfig {
             return this;
         }
 
+        public ServerConfigBuilder setRdbFileName(String fileName) {
+            this.rdbFileName = fileName;
+            return this;
+        }
     }
 
     public void printConfig() {

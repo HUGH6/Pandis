@@ -38,3 +38,4 @@ fabric.properties
 logs/
 
 *.aof
+*.rdb

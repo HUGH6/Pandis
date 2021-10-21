@@ -1,6 +1,7 @@
 package server;
 
 import common.persistence.AOFPersistence;
+import common.persistence.RDBPersistence;
 import database.Database;
 import event.EventLoopBeforeSleepProcedure;
 import event.GlobalCycleTimeEvent;
@@ -56,6 +57,11 @@ public class PandisServer {
 
     private AOFPersistence aofPersistence;
 
+    /********************************************************
+     * RDB持久化功能
+     *******************************************************/
+
+    private RDBPersistence rdbPersistence;
 
     public PandisServer() {
         super();
@@ -112,6 +118,9 @@ public class PandisServer {
 
         // aof持久化
         this.aofPersistence = new AOFPersistence(this.serverConfig.getAofFileName(), this.serverConfig.getAppendFsync());
+
+        // rdb持久化
+        this.rdbPersistence = new RDBPersistence(this);
 
         // 创建数据库
         this.databases = new Database[this.serverConfig.getDbNumber()];
@@ -272,6 +281,10 @@ public class PandisServer {
 
     public AOFPersistence getAofPersistence() {
         return this.aofPersistence;
+    }
+
+    public RDBPersistence getRdbPersistence() {
+        return this.rdbPersistence;
     }
 }
 

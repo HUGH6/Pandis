@@ -50,6 +50,8 @@ public class CommandExecutor {
         commandTable.put("punsubscribe", new PunsubscribeCommand());
         commandTable.put("publish", new PublishCommand());
         commandTable.put("pubsub", new PubsubCommand());
+        commandTable.put("save", new SaveCommand());
+        commandTable.put("bgsave", new BackgroundSaveCommand());
     }
 
     public static CommandExecutor getExecutor() {
